@@ -83,14 +83,13 @@ class XEP_0060(BasePlugin):
                 condensed.values = values
                 condensed['pubsub_event']['items']['node'] = node
                 condensed['pubsub_event']['items'].append(item)
-                self.xmpp.event('pubsub_%s' % event_type, msg)
+                self.xmpp.event(f'pubsub_{event_type}', msg)
                 if event_name:
-                    self.xmpp.event('%s_%s' % (event_name, event_type),
-                                    condensed)
+                    self.xmpp.event(f'{event_name}_{event_type}', condensed)
             else:
-                self.xmpp.event('pubsub_%s' % event_type, msg)
+                self.xmpp.event(f'pubsub_{event_type}', msg)
                 if event_name:
-                    self.xmpp.event('%s_%s' % (event_name, event_type), msg)
+                    self.xmpp.event(f'{event_name}_{event_type}', msg)
 
     def _handle_event_purge(self, msg):
         """Raise events for node purge notifications."""
@@ -99,7 +98,7 @@ class XEP_0060(BasePlugin):
 
         self.xmpp.event('pubsub_purge', msg)
         if event_name:
-            self.xmpp.event('%s_purge' % event_name, msg)
+            self.xmpp.event(f'{event_name}_purge', msg)
 
     def _handle_event_delete(self, msg):
         """Raise events for node deletion notifications."""
@@ -108,7 +107,7 @@ class XEP_0060(BasePlugin):
 
         self.xmpp.event('pubsub_delete', msg)
         if event_name:
-            self.xmpp.event('%s_delete' % event_name, msg)
+            self.xmpp.event(f'{event_name}_delete', msg)
 
     def _handle_event_configuration(self, msg):
         """Raise events for node configuration notifications."""
@@ -117,7 +116,7 @@ class XEP_0060(BasePlugin):
 
         self.xmpp.event('pubsub_config', msg)
         if event_name:
-            self.xmpp.event('%s_config' % event_name, msg)
+            self.xmpp.event(f'{event_name}_config', msg)
 
     def _handle_event_subscription(self, msg):
         """Raise events for node subscription notifications."""
@@ -126,7 +125,7 @@ class XEP_0060(BasePlugin):
 
         self.xmpp.event('pubsub_subscription', msg)
         if event_name:
-            self.xmpp.event('%s_subscription' % event_name, msg)
+            self.xmpp.event(f'{event_name}_subscription', msg)
 
     def map_node_event(self, node, event_name):
         """
@@ -231,16 +230,9 @@ class XEP_0060(BasePlugin):
 
         if subscribee is None:
             if ifrom:
-                if bare:
-                    subscribee = JID(ifrom).bare
-                else:
-                    subscribee = ifrom
+                subscribee = JID(ifrom).bare if bare else ifrom
             else:
-                if bare:
-                    subscribee = self.xmpp.boundjid.bare
-                else:
-                    subscribee = self.xmpp.boundjid
-
+                subscribee = self.xmpp.boundjid.bare if bare else self.xmpp.boundjid
         iq['pubsub']['subscribe']['jid'] = subscribee
         if options is not None:
             iq['pubsub']['options'].append(options)
@@ -279,16 +271,9 @@ class XEP_0060(BasePlugin):
 
         if subscribee is None:
             if ifrom:
-                if bare:
-                    subscribee = JID(ifrom).bare
-                else:
-                    subscribee = ifrom
+                subscribee = JID(ifrom).bare if bare else ifrom
             else:
-                if bare:
-                    subscribee = self.xmpp.boundjid.bare
-                else:
-                    subscribee = self.xmpp.boundjid
-
+                subscribee = self.xmpp.boundjid.bare if bare else self.xmpp.boundjid
         iq['pubsub']['unsubscribe']['jid'] = subscribee
         iq['pubsub']['unsubscribe']['subid'] = subid
         return iq.send(callback=callback, timeout=timeout, timeout_callback=timeout_callback)

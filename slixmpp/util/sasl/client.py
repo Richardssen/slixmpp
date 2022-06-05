@@ -55,13 +55,11 @@ saslprep = stringprep_profiles.create(
 def sasl_mech(score):
     sec_score = score
     def register(mech):
-        n = 0
         mech.score = sec_score
         if mech.use_hashes:
-            for hashing_alg in hashes():
-                n += 1
+            for n, hashing_alg in enumerate(hashes(), start=1):
                 score = mech.score + n
-                name = '%s-%s' % (mech.name, hashing_alg)
+                name = f'{mech.name}-{hashing_alg}'
                 MECHANISMS[name] = mech
                 MECH_SEC_SCORES[name] = score
 
@@ -74,7 +72,7 @@ def sasl_mech(score):
             MECHANISMS[mech.name] = mech
             MECH_SEC_SCORES[mech.name] = mech.score
             if mech.channel_binding:
-                MECHANISMS[mech.name + '-PLUS'] = mech
+                MECHANISMS[f'{mech.name}-PLUS'] = mech
                 MECH_SEC_SCORES[mech.name] = mech.score + 10
         return mech
     return register
@@ -140,10 +138,9 @@ def choose(mech_list, credentials, security_settings, limit=None, min_mech=None)
     best_score = MECH_SEC_SCORES.get(min_mech, -1)
     best_mech = None
     for name in available_mechs:
-        if name in MECH_SEC_SCORES:
-            if MECH_SEC_SCORES[name] > best_score:
-                best_score = MECH_SEC_SCORES[name]
-                best_mech = name
+        if name in MECH_SEC_SCORES and MECH_SEC_SCORES[name] > best_score:
+            best_score = MECH_SEC_SCORES[name]
+            best_mech = name
     if best_mech is None:
         raise SASLNoAppropriateMechanism()
 
@@ -154,7 +151,7 @@ def choose(mech_list, credentials, security_settings, limit=None, min_mech=None)
                             mech_class.optional_credentials)
         for req in mech_class.required_credentials:
             if req not in creds:
-                raise SASLCancelled('Missing credential: %s' % req)
+                raise SASLCancelled(f'Missing credential: {req}')
         for opt in mech_class.optional_credentials:
             if opt not in creds:
                 creds[opt] = b''

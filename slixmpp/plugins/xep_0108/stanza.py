@@ -43,21 +43,20 @@ class UserActivity(ElementBase):
         self.del_value()
         general = value
         specific = None
-        if isinstance(value, tuple) or isinstance(value, list):
+        if isinstance(value, (tuple, list)):
             general = value[0]
             specific = value[1]
 
-        if general in self.general:
-            gen_xml = ET.Element('{%s}%s' % (self.namespace, general))
-            if specific:
-                spec_xml = ET.Element('{%s}%s' % (self.namespace, specific))
-                if specific in self.specific:
-                    gen_xml.append(spec_xml)
-                else:
-                    raise ValueError('Unknown specific activity')
-            self.xml.append(gen_xml)
-        else:
+        if general not in self.general:
             raise ValueError('Unknown general activity')
+        gen_xml = ET.Element('{%s}%s' % (self.namespace, general))
+        if specific:
+            spec_xml = ET.Element('{%s}%s' % (self.namespace, specific))
+            if specific in self.specific:
+                gen_xml.append(spec_xml)
+            else:
+                raise ValueError('Unknown specific activity')
+        self.xml.append(gen_xml)
 
     def get_value(self):
         general = None

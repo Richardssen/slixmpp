@@ -20,8 +20,7 @@ class BlockList(ElementBase):
         items = self.xml.findall('{%s}item' % self.namespace)
         if items is not None:
             for item in items:
-                jid = JID(item.attrib.get('jid', ''))
-                if jid:
+                if jid := JID(item.attrib.get('jid', '')):
                     result.add(jid)
         return result
 

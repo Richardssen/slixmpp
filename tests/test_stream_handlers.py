@@ -155,13 +155,13 @@ class TestHandlers(SlixTest):
         """
 
         def handler_1(msg):
-            msg.reply("Handler 1: %s" % msg['body']).send()
+            msg.reply(f"Handler 1: {msg['body']}").send()
 
         def handler_2(msg):
-            msg.reply("Handler 2: %s" % msg['body']).send()
+            msg.reply(f"Handler 2: {msg['body']}").send()
 
         def handler_3(msg):
-            msg.reply("Handler 3: %s" % msg['body']).send()
+            msg.reply(f"Handler 3: {msg['body']}").send()
 
         self.xmpp.add_event_handler('message', handler_1)
         self.xmpp.add_event_handler('message', handler_2)

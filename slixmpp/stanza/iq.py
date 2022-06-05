@@ -69,10 +69,7 @@ class Iq(RootStanza):
         """
         StanzaBase.__init__(self, *args, **kwargs)
         if self['id'] == '':
-            if self.stream is not None:
-                self['id'] = self.stream.new_id()
-            else:
-                self['id'] = '0'
+            self['id'] = self.stream.new_id() if self.stream is not None else '0'
 
     def unhandled(self):
         """
@@ -108,8 +105,7 @@ class Iq(RootStanza):
         """
         query = self.xml.find("{%s}query" % value)
         if query is None and value:
-            plugin = self.plugin_tag_map.get('{%s}query' % value, None)
-            if plugin:
+            if plugin := self.plugin_tag_map.get('{%s}query' % value, None):
                 self.enable(plugin.plugin_attrib)
             else:
                 self.clear()
@@ -207,13 +203,13 @@ class Iq(RootStanza):
                 return
 
             if timeout is not None:
-                self.stream.cancel_schedule('IqTimeout_%s' % self['id'])
+                self.stream.cancel_schedule(f"IqTimeout_{self['id']}")
             if callback is not None:
                 callback(result)
 
         def callback_timeout():
             future.set_exception(IqTimeout(self))
-            self.stream.remove_handler('IqCallback_%s' % self['id'])
+            self.stream.remove_handler(f"IqCallback_{self['id']}")
             if timeout_callback is not None:
                 timeout_callback(self)
 
@@ -240,12 +236,12 @@ class Iq(RootStanza):
 
     def _handle_result(self, iq):
         # we got the IQ, so don't fire the timeout
-        self.stream.cancel_schedule('IqTimeout_%s' % self['id'])
+        self.stream.cancel_schedule(f"IqTimeout_{self['id']}")
         self.callback(iq)
 
     def _fire_timeout(self):
         # don't fire the handler for the IQ, if it finally does come in
-        self.stream.remove_handler('IqCallback_%s' % self['id'])
+        self.stream.remove_handler(f"IqCallback_{self['id']}")
         self.timeout_callback(self)
 
     def _set_stanza_values(self, values):
@@ -264,8 +260,7 @@ class Iq(RootStanza):
                       Plugin interfaces may accept a nested dictionary that
                       will be used recursively.
         """
-        query = values.get('query', '')
-        if query:
+        if query := values.get('query', ''):
             del values['query']
             StanzaBase._set_stanza_values(self, values)
             self['query'] = query

@@ -71,11 +71,7 @@ class Request(ElementBase):
         Helper function for getting of flags. Returns all flags in
         dictionary format: { "flag name": "flag value" ... }
         """
-        flags = {}
-        for f in self._flags:
-            if not self[f] == "":
-                flags[f] = self[f]
-        return flags
+        return {f: self[f] for f in self._flags if self[f] != ""}
 
     def _set_flags(self, flags):
         """
@@ -85,10 +81,7 @@ class Request(ElementBase):
             flags -- Flags in dictionary format: { "flag name": "flag value" ... }
         """
         for f in self._flags:
-            if flags is not None and f in flags:
-                self[f] = flags[f]
-            else:
-                self[f] = None
+            self[f] = flags[f] if flags is not None and f in flags else None
 
     def add_node(self, nodeId, sourceId=None, cacheType=None):
         """
@@ -128,11 +121,7 @@ class Request(ElementBase):
 
     def get_nodes(self):
         """Return all nodes."""
-        nodes = []
-        for node in self['substanzas']:
-            if isinstance(node, RequestNode):
-                nodes.append(node)
-        return nodes
+        return [node for node in self['substanzas'] if isinstance(node, RequestNode)]
 
     def set_nodes(self, nodes):
         """
@@ -194,11 +183,11 @@ class Request(ElementBase):
 
     def get_fields(self):
         """Return all fields."""
-        fields = []
-        for field in self['substanzas']:
-            if isinstance(field, RequestField):
-                fields.append(field)
-        return fields
+        return [
+            field
+            for field in self['substanzas']
+            if isinstance(field, RequestField)
+        ]
 
     def set_fields(self, fields):
         """
@@ -355,11 +344,7 @@ class Fields(ElementBase):
 
     def get_nodes(self):
         """Return all nodes."""
-        nodes = []
-        for node in self['substanzas']:
-            if isinstance(node, FieldsNode):
-                nodes.append(node)
-        return nodes
+        return [node for node in self['substanzas'] if isinstance(node, FieldsNode)]
 
     def set_nodes(self, nodes):
         """
@@ -426,7 +411,7 @@ class FieldsNode(ElementBase):
             self._timestamps.add((timestamp))
             ts = Timestamp(parent=self)
             ts['value'] = timestamp
-            if not substanzas is None:
+            if substanzas is not None:
                 ts.set_datas(substanzas)
                 #print("add_timestamp with substanzas: " + str(substanzas))
             self.iterables.append(ts)
@@ -453,12 +438,11 @@ class FieldsNode(ElementBase):
 
     def get_timestamps(self):
         """Return all timestamps."""
-        #print(str(id(self)) + " get_timestamps: ")
-        timestamps = []
-        for timestamp in self['substanzas']:
-            if isinstance(timestamp, Timestamp):
-                timestamps.append(timestamp)
-        return timestamps
+        return [
+            timestamp
+            for timestamp in self['substanzas']
+            if isinstance(timestamp, Timestamp)
+        ]
 
     def set_timestamps(self, timestamps):
         """
@@ -519,10 +503,6 @@ class Field(ElementBase):
         pattern = re.compile("^\d+([|]\w+([.]\w+)*([|][^,]*)?)?(,\d+([|]\w+([.]\w+)*([|][^,]*)?)?)*$")
         if pattern.match(value) is not None:
             self.xml.stringIds = value
-        else:
-            # Bad content, add nothing
-            pass
-
         return self
 
     def _get_flags(self):
@@ -530,11 +510,7 @@ class Field(ElementBase):
         Helper function for getting of flags. Returns all flags in
         dictionary format: { "flag name": "flag value" ... }
         """
-        flags = {}
-        for f in self._flags:
-            if not self[f] == "":
-                flags[f] = self[f]
-        return flags
+        return {f: self[f] for f in self._flags if self[f] != ""}
 
     def _set_flags(self, flags):
         """
@@ -544,10 +520,7 @@ class Field(ElementBase):
             flags -- Flags in dictionary format: { "flag name": "flag value" ... }
         """
         for f in self._flags:
-            if flags is not None and f in flags:
-                self[f] = flags[f]
-            else:
-                self[f] = None
+            self[f] = flags[f] if flags is not None and f in flags else None
 
     def _get_typename(self):
         return "invalid type, use subclasses!"
@@ -638,11 +611,7 @@ class Timestamp(ElementBase):
 
     def get_datas(self):
         """ Return all data elements. """
-        datas = []
-        for data in self['substanzas']:
-            if isinstance(data, Field):
-                datas.append(data)
-        return datas
+        return [data for data in self['substanzas'] if isinstance(data, Field)]
 
     def set_datas(self, datas):
         """

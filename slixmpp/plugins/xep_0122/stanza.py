@@ -83,7 +83,7 @@ class FormValidation(ElementBase):
         present = self.xml.find('{%s}range' % self.namespace)
         if present is not None:
             attributes = present.attrib
-            return_value = dict()
+            return_value = {}
             if 'min' in attributes:
                 return_value['minimum'] = attributes['min']
             if 'max' in attributes:

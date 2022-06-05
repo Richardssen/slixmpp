@@ -28,21 +28,27 @@ class OAuth(ElementBase):
                                  token_secret, method='HMAC-SHA1'):
         self['oauth_signature_method'] = method
 
-        request = urllib.quote('%s&%s' % (sfrom, sto), '')
-        parameters = urllib.quote('&'.join([
-            'oauth_consumer_key=%s' % self['oauth_consumer_key'],
-            'oauth_nonce=%s' % self['oauth_nonce'],
-            'oauth_signature_method=%s' % self['oauth_signature_method'],
-            'oauth_timestamp=%s' % self['oauth_timestamp'],
-            'oauth_token=%s' % self['oauth_token'],
-            'oauth_version=%s' % self['oauth_version']
-        ]), '')
+        request = urllib.quote(f'{sfrom}&{sto}', '')
+        parameters = urllib.quote(
+            '&'.join(
+                [
+                    f"oauth_consumer_key={self['oauth_consumer_key']}",
+                    f"oauth_nonce={self['oauth_nonce']}",
+                    f"oauth_signature_method={self['oauth_signature_method']}",
+                    f"oauth_timestamp={self['oauth_timestamp']}",
+                    f"oauth_token={self['oauth_token']}",
+                    f"oauth_version={self['oauth_version']}",
+                ]
+            ),
+            '',
+        )
 
-        sigbase = '%s&%s&%s' % (stanza, request, parameters)
+
+        sigbase = f'{stanza}&{request}&{parameters}'
 
         consumer_secret = urllib.quote(consumer_secret, '')
         token_secret = urllib.quote(token_secret, '')
-        key = '%s&%s' % (consumer_secret, token_secret)
+        key = f'{consumer_secret}&{token_secret}'
 
         if method == 'HMAC-SHA1':
             sig = base64.b64encode(hmac.new(key, sigbase, hashlib.sha1).digest())
@@ -56,21 +62,27 @@ class OAuth(ElementBase):
                                token_secret):
         method = self['oauth_signature_method']
 
-        request = urllib.quote('%s&%s' % (sfrom, sto), '')
-        parameters = urllib.quote('&'.join([
-            'oauth_consumer_key=%s' % self['oauth_consumer_key'],
-            'oauth_nonce=%s' % self['oauth_nonce'],
-            'oauth_signature_method=%s' % self['oauth_signature_method'],
-            'oauth_timestamp=%s' % self['oauth_timestamp'],
-            'oauth_token=%s' % self['oauth_token'],
-            'oauth_version=%s' % self['oauth_version']
-        ]), '')
+        request = urllib.quote(f'{sfrom}&{sto}', '')
+        parameters = urllib.quote(
+            '&'.join(
+                [
+                    f"oauth_consumer_key={self['oauth_consumer_key']}",
+                    f"oauth_nonce={self['oauth_nonce']}",
+                    f"oauth_signature_method={self['oauth_signature_method']}",
+                    f"oauth_timestamp={self['oauth_timestamp']}",
+                    f"oauth_token={self['oauth_token']}",
+                    f"oauth_version={self['oauth_version']}",
+                ]
+            ),
+            '',
+        )
 
-        sigbase = '%s&%s&%s' % (stanza, request, parameters)
+
+        sigbase = f'{stanza}&{request}&{parameters}'
 
         consumer_secret = urllib.quote(consumer_secret, '')
         token_secret = urllib.quote(token_secret, '')
-        key = '%s&%s' % (consumer_secret, token_secret)
+        key = f'{consumer_secret}&{token_secret}'
 
         if method == 'HMAC-SHA1':
             sig = base64.b64encode(hmac.new(key, sigbase, hashlib.sha1).digest())

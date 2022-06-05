@@ -22,14 +22,13 @@ class TestFilters(SlixTest):
         data = []
 
         def in_filter(stanza):
-            if isinstance(stanza, Message):
-                if stanza['body'] == 'testing':
-                    stanza['subject'] = stanza['body'] + ' filter'
-                    print('>>> %s' % stanza['subject'])
+            if isinstance(stanza, Message) and stanza['body'] == 'testing':
+                stanza['subject'] = stanza['body'] + ' filter'
+                print(f">>> {stanza['subject']}")
             return stanza
 
         def on_message(msg):
-            print('<<< %s' % msg['subject'])
+            print(f"<<< {msg['subject']}")
             data.append(msg['subject'])
 
         self.xmpp.add_filter('in', in_filter)
@@ -53,9 +52,8 @@ class TestFilters(SlixTest):
     def testOutgoing(self):
 
         def out_filter(stanza):
-            if isinstance(stanza, Message):
-                if stanza['body'] == 'testing':
-                    stanza['body'] = 'changed!'
+            if isinstance(stanza, Message) and stanza['body'] == 'testing':
+                stanza['body'] = 'changed!'
             return stanza
 
         self.xmpp.add_filter('out', out_filter)

@@ -42,7 +42,7 @@ class AnswerConfirm(slixmpp.ClientXMPP):
                      confirm['method'])
                 )
         result = input("Do you accept (y/N)? ")
-        return 'y' == result.lower()
+        return result.lower() == 'y'
 
     def confirm(self, stanza):
         if self.prompt(stanza):

@@ -50,7 +50,7 @@ class AdminCommands(slixmpp.ClientXMPP):
             print('Command completed')
             if iq['command']['form']:
                 for var, field in iq['command']['form']['fields'].items():
-                    print('%s: %s' % (var, field['value']))
+                    print(f"{var}: {field['value']}")
             if iq['command']['notes']:
                 print('Command Notes:')
                 for note in iq['command']['notes']:
@@ -59,8 +59,7 @@ class AdminCommands(slixmpp.ClientXMPP):
 
         def command_error(iq, session):
             print('Error completing command')
-            print('%s: %s' % (iq['error']['condition'],
-                              iq['error']['text']))
+            print(f"{iq['error']['condition']}: {iq['error']['text']}")
             self['xep_0050'].terminate_command(session)
             self.disconnect()
 
@@ -68,17 +67,18 @@ class AdminCommands(slixmpp.ClientXMPP):
             form = iq['command']['form']
             answers = {}
             for var, field in form['fields'].items():
-                if var != 'FORM_TYPE':
-                    if field['type'] == 'boolean':
-                        answers[var] = input('%s (y/n): ' % field['label'])
-                        if answers[var].lower() in ('1', 'true', 'y', 'yes'):
-                            answers[var] = '1'
-                        else:
-                            answers[var] = '0'
-                    else:
-                        answers[var] = input('%s: ' % field['label'])
-                else:
+                if var == 'FORM_TYPE':
                     answers['FORM_TYPE'] = field['value']
+                elif field['type'] == 'boolean':
+                    answers[var] = input(f"{field['label']} (y/n): ")
+                    answers[var] = (
+                        '1'
+                        if answers[var].lower() in ('1', 'true', 'y', 'yes')
+                        else '0'
+                    )
+
+                else:
+                    answers[var] = input(f"{field['label']}: ")
             form['type'] = 'submit'
             form['values'] = answers
 

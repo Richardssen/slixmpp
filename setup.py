@@ -49,12 +49,12 @@ def check_include(library_name, header):
         return False
     command = [os.environ.get('CC', 'cc')] + cflags + ['-E', '-']
     with TemporaryFile('w+') as c_file:
-        c_file.write('#include <%s>' % header)
+        c_file.write(f'#include <{header}>')
         c_file.seek(0)
         try:
             return call(command, stdin=c_file, stdout=DEVNULL, stderr=DEVNULL) == 0
         except FileNotFoundError:
-            print('%s headers not found.' % library_name)
+            print(f'{library_name} headers not found.')
             return False
 
 HAS_PYTHON_HEADERS = check_include('python3', 'Python.h')

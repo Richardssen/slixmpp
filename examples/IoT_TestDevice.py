@@ -67,16 +67,20 @@ class IoT_TestDevice(slixmpp.ClientXMPP):
         self.send_presence()
         self.get_roster()
         # tell your preffered friend that you are alive
-        self.send_message(mto='jocke@jabber.sust.se', mbody=self.boundjid.bare +' is now online use xep_323 stanza to talk to me')
+        self.send_message(
+            mto='jocke@jabber.sust.se',
+            mbody=f'{self.boundjid.bare} is now online use xep_323 stanza to talk to me',
+        )
+
 
         if not(self.beServer):
             session=self['xep_0323'].request_data(self.boundjid.full,self.clientJID,self.datacallback)
 
     def message(self, msg):
         if msg['type'] in ('chat', 'normal'):
-            logging.debug("got normal chat message" + str(msg))
+            logging.debug(f"got normal chat message{str(msg)}")
             ip=urlopen('http://icanhazip.com').read()
-            msg.reply("Hi I am " + self.boundjid.full + " and I am on IP " + ip).send()
+            msg.reply(f"Hi I am {self.boundjid.full} and I am on IP {ip}").send()
         else:
             logging.debug("got unknown message type %s", str(msg['type']))
 

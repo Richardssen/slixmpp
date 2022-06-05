@@ -120,7 +120,7 @@ def multifactory(stanza, plugin_attrib):
 
     def set_multi(self, val, lang=None):
         parent = self.parent()
-        del_multi = getattr(self, 'del_%s' % plugin_attrib)
+        del_multi = getattr(self, f'del_{plugin_attrib}')
         del_multi(lang)
         for sub in val:
             parent.append(sub)
@@ -131,18 +131,18 @@ def multifactory(stanza, plugin_attrib):
             res = filter(plugin_filter(self), parent)
         else:
             res = filter(plugin_filter(self, lang), parent)
-        res = list(res)
-        if not res:
+        if res := list(res):
+            for stanza in list(res):
+                parent.iterables.remove(stanza)
+                parent.xml.remove(stanza.xml)
+
+        else:
             del parent.plugins[(plugin_attrib, None)]
             parent.loaded_plugins.remove(plugin_attrib)
             try:
                 parent.xml.remove(self.xml)
             except ValueError:
                 pass
-        else:
-            for stanza in list(res):
-                parent.iterables.remove(stanza)
-                parent.xml.remove(stanza.xml)
 
     Multi.is_extension = True
     Multi.plugin_attrib = plugin_attrib
@@ -408,10 +408,11 @@ class ElementBase(object):
         #: If not, then :attr:`parent` is ``None``.
         self.parent = None
         if parent is not None:
-            if not isinstance(parent, weakref.ReferenceType):
-                self.parent = weakref.ref(parent)
-            else:
-                self.parent = parent
+            self.parent = (
+                parent
+                if isinstance(parent, weakref.ReferenceType)
+                else weakref.ref(parent)
+            )
 
         if self.setup(xml):
             # If we generated our own XML, then everything is ready.
@@ -439,23 +440,22 @@ class ElementBase(object):
             self.xml = xml
 
         last_xml = self.xml
-        if self.xml is None:
-            # Generate XML from the stanza definition
-            for ename in self.name.split('/'):
-                new = ET.Element("{%s}%s" % (self.namespace, ename))
-                if self.xml is None:
-                    self.xml = new
-                else:
-                    last_xml.append(new)
-                last_xml = new
-            if self.parent is not None:
-                self.parent().xml.append(self.xml)
-
-            # We had to generate XML
-            return True
-        else:
+        if self.xml is not None:
             # We did not generate XML
             return False
+        # Generate XML from the stanza definition
+        for ename in self.name.split('/'):
+            new = ET.Element("{%s}%s" % (self.namespace, ename))
+            if self.xml is None:
+                self.xml = new
+            else:
+                last_xml.append(new)
+            last_xml = new
+        if self.parent is not None:
+            self.parent().xml.append(self.xml)
+
+        # We had to generate XML
+        return True
 
     def enable(self, attrib, lang=None):
         """Enable and initialize a stanza plugin.
@@ -476,16 +476,12 @@ class ElementBase(object):
 
         plugin_class = self.plugin_attrib_map[name]
 
-        if plugin_class.is_extension:
-            if (name, None) in self.plugins:
-                return self.plugins[(name, None)]
-            else:
-                return None if check else self.init_plugin(name, lang)
+        if plugin_class.is_extension and (name, None) in self.plugins:
+            return self.plugins[(name, None)]
+        elif plugin_class.is_extension or (name, lang) not in self.plugins:
+            return None if check else self.init_plugin(name, lang)
         else:
-            if (name, lang) in self.plugins:
-                return self.plugins[(name, lang)]
-            else:
-                return None if check else self.init_plugin(name, lang)
+            return self.plugins[(name, lang)]
 
     def init_plugin(self, attrib, lang=None, existing_xml=None, reuse=True):
         """Enable and initialize a stanza plugin.
@@ -549,11 +545,10 @@ class ElementBase(object):
             else:
                 values[interface] = self[interface]
             if interface in self.lang_interfaces:
-                values['%s|*' % interface] = self['%s|*' % interface]
+                values[f'{interface}|*'] = self[f'{interface}|*']
         for plugin, stanza in self.plugins.items():
-            lang = stanza['lang']
-            if lang:
-                values['%s|%s' % (plugin[0], lang)] = stanza.values
+            if lang := stanza['lang']:
+                values[f'{plugin[0]}|{lang}'] = stanza.values
             else:
                 values[plugin[0]] = stanza.values
         if self.iterables:
@@ -603,7 +598,7 @@ class ElementBase(object):
 
         for interface, value in values.items():
             full_interface = interface
-            interface_lang = ('%s|' % interface).split('|')
+            interface_lang = f'{interface}|'.split('|')
             interface = interface_lang[0]
             lang = interface_lang[1] or self.get_lang()
 
@@ -615,8 +610,7 @@ class ElementBase(object):
                 self[full_interface] = value
             elif interface in self.plugin_attrib_map:
                 if interface not in iterable_interfaces:
-                    plugin = self._get_plugin(interface, lang)
-                    if plugin:
+                    if plugin := self._get_plugin(interface, lang):
                         plugin.values = value
         return self
 
@@ -649,34 +643,30 @@ class ElementBase(object):
 
         :param string full_attrib: The name of the requested stanza interface.
         """
-        attrib, lang, *_ = ('%s|' % full_attrib).split('|')
+        attrib, lang, *_ = f'{full_attrib}|'.split('|')
 
         kwargs = {'lang': lang} if lang and attrib in self.lang_interfaces else {}
 
         if attrib == 'substanzas':
             return self.iterables
         elif attrib in self.interfaces or attrib == 'lang':
-            get_method = "get_%s" % attrib.lower()
+            get_method = f"get_{attrib.lower()}"
 
             if self.plugin_overrides:
-                name = self.plugin_overrides.get(get_method, None)
-                if name:
-                    plugin = self._get_plugin(name, lang)
-                    if plugin:
-                        handler = getattr(plugin, get_method, None)
-                        if handler:
+                if name := self.plugin_overrides.get(get_method, None):
+                    if plugin := self._get_plugin(name, lang):
+                        if handler := getattr(plugin, get_method, None):
                             return handler(**kwargs)
 
             if hasattr(self, get_method):
                 return getattr(self, get_method)(**kwargs)
+            if attrib in self.sub_interfaces:
+                return self._get_sub_text(attrib, lang=lang)
+            elif attrib in self.bool_interfaces:
+                elem = self.xml.find('{%s}%s' % (self.namespace, attrib))
+                return elem is not None
             else:
-                if attrib in self.sub_interfaces:
-                    return self._get_sub_text(attrib, lang=lang)
-                elif attrib in self.bool_interfaces:
-                    elem = self.xml.find('{%s}%s' % (self.namespace, attrib))
-                    return elem is not None
-                else:
-                    return self._get_attr(attrib)
+                return self._get_attr(attrib)
         elif attrib in self.plugin_attrib_map:
             plugin = self._get_plugin(attrib, lang)
             if plugin and plugin.is_extension:
@@ -718,7 +708,7 @@ class ElementBase(object):
         :param value: The new value of the stanza interface.
         """
         full_attrib = attrib
-        attrib_lang = ('%s|' % attrib).split('|')
+        attrib_lang = f'{attrib}|'.split('|')
         attrib = attrib_lang[0]
         lang = attrib_lang[1] or None
 
@@ -730,43 +720,36 @@ class ElementBase(object):
 
         if attrib in self.interfaces or attrib == 'lang':
             if value is not None:
-                set_method = "set_%s" % attrib.lower()
+                set_method = f"set_{attrib.lower()}"
 
                 if self.plugin_overrides:
-                    name = self.plugin_overrides.get(set_method, None)
-                    if name:
-                        plugin = self._get_plugin(name, lang)
-                        if plugin:
-                            handler = getattr(plugin, set_method, None)
-                            if handler:
+                    if name := self.plugin_overrides.get(set_method, None):
+                        if plugin := self._get_plugin(name, lang):
+                            if handler := getattr(plugin, set_method, None):
                                 return handler(value, **kwargs)
 
                 if hasattr(self, set_method):
                     getattr(self, set_method)(value, **kwargs)
+                elif attrib in self.sub_interfaces:
+                    if lang == '*':
+                        return self._set_all_sub_text(attrib,
+                                                      value,
+                                                      lang='*')
+                    return self._set_sub_text(attrib, text=value,
+                                                      lang=lang)
+                elif attrib in self.bool_interfaces:
+                    return (
+                        self._set_sub_text(attrib, '', keep=True, lang=lang)
+                        if value
+                        else self._set_sub_text(attrib, '', keep=False, lang=lang)
+                    )
+
                 else:
-                    if attrib in self.sub_interfaces:
-                        if lang == '*':
-                            return self._set_all_sub_text(attrib,
-                                                          value,
-                                                          lang='*')
-                        return self._set_sub_text(attrib, text=value,
-                                                          lang=lang)
-                    elif attrib in self.bool_interfaces:
-                        if value:
-                            return self._set_sub_text(attrib, '',
-                                    keep=True,
-                                    lang=lang)
-                        else:
-                            return self._set_sub_text(attrib, '',
-                                    keep=False,
-                                    lang=lang)
-                    else:
-                        self._set_attr(attrib, value)
+                    self._set_attr(attrib, value)
             else:
                 self.__delitem__(attrib)
         elif attrib in self.plugin_attrib_map:
-            plugin = self._get_plugin(attrib, lang)
-            if plugin:
+            if plugin := self._get_plugin(attrib, lang):
                 plugin[full_attrib] = value
         return self
 
@@ -803,7 +786,7 @@ class ElementBase(object):
         :param attrib: The name of the affected stanza interface.
         """
         full_attrib = attrib
-        attrib_lang = ('%s|' % attrib).split('|')
+        attrib_lang = f'{attrib}|'.split('|')
         attrib = attrib_lang[0]
         lang = attrib_lang[1] or None
 
@@ -814,26 +797,20 @@ class ElementBase(object):
         kwargs = OrderedDict(kwargs)
 
         if attrib in self.interfaces or attrib == 'lang':
-            del_method = "del_%s" % attrib.lower()
+            del_method = f"del_{attrib.lower()}"
 
             if self.plugin_overrides:
-                name = self.plugin_overrides.get(del_method, None)
-                if name:
-                    plugin = self._get_plugin(attrib, lang)
-                    if plugin:
-                        handler = getattr(plugin, del_method, None)
-                        if handler:
+                if name := self.plugin_overrides.get(del_method, None):
+                    if plugin := self._get_plugin(attrib, lang):
+                        if handler := getattr(plugin, del_method, None):
                             return handler(**kwargs)
 
             if hasattr(self, del_method):
                 getattr(self, del_method)(**kwargs)
+            elif attrib in self.sub_interfaces or attrib in self.bool_interfaces:
+                return self._del_sub(attrib, lang=lang)
             else:
-                if attrib in self.sub_interfaces:
-                    return self._del_sub(attrib, lang=lang)
-                elif attrib in self.bool_interfaces:
-                    return self._del_sub(attrib, lang=lang)
-                else:
-                    self._del_attr(attrib)
+                self._del_attr(attrib)
         elif attrib in self.plugin_attrib_map:
             plugin = self._get_plugin(attrib, lang, check=True)
             if not plugin:
@@ -926,8 +903,7 @@ class ElementBase(object):
 
         default_lang = self.get_lang()
         results = OrderedDict()
-        stanzas = self.xml.findall(name)
-        if stanzas:
+        if stanzas := self.xml.findall(name):
             for stanza in stanzas:
                 stanza_lang = stanza.attrib.get('{%s}lang' % XML_NS,
                                                 default_lang)
@@ -1145,8 +1121,8 @@ class ElementBase(object):
         Allows stanza objects to be used like dictionaries.
         """
         out = []
-        out += [x for x in self.interfaces]
-        out += [x for x in self.loaded_plugins]
+        out += list(self.interfaces)
+        out += list(self.loaded_plugins)
         out.append('lang')
         if self.iterables:
             out.append('substanzas')
@@ -1272,13 +1248,9 @@ class ElementBase(object):
 
         # Check that the other stanza is a superset of this stanza.
         values = other.values
-        for key in self.keys():
-            if key not in values or values[key] != self[key]:
-                return False
-
-        # Both stanzas are supersets of each other, therefore they
-        # must be equal.
-        return True
+        return not any(
+            key not in values or values[key] != self[key] for key in self.keys()
+        )
 
     def __ne__(self, other):
         """Compare the stanza object with another to test for inequality.

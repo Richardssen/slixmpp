@@ -69,9 +69,8 @@ class XEP_0054(BasePlugin):
                 if self.xmpp.is_component:
                     if jid.domain == self.xmpp.boundjid.domain:
                         local = True
-                else:
-                    if str(jid) == str(self.xmpp.boundjid):
-                        local = True
+                elif str(jid) == str(self.xmpp.boundjid):
+                    local = True
                 jid = jid.full
             elif jid in (None, ''):
                 local = True

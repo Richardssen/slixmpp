@@ -85,9 +85,8 @@ class XEP_0012(BasePlugin):
         if self.xmpp.is_component:
             if jid.domain == self.xmpp.boundjid.domain:
                 local = True
-        else:
-            if str(jid) == str(self.xmpp.boundjid):
-                local = True
+        elif str(jid) == str(self.xmpp.boundjid):
+            local = True
         jid = jid.full
 
         if local or jid in (None, ''):
@@ -130,21 +129,16 @@ class XEP_0012(BasePlugin):
             del self._last_activities[jid]
 
     def _default_get_last_activity(self, jid, node, ifrom, iq):
-        if not isinstance(iq, Iq):
-            reply = self.xmpp.Iq()
-        else:
-            reply = iq.reply()
-
+        reply = iq.reply() if isinstance(iq, Iq) else self.xmpp.Iq()
         if jid not in self._last_activities:
             raise XMPPError('service-unavailable')
 
         bare = JID(jid).bare
 
-        if bare != self.xmpp.boundjid.bare:
-            if bare in self.xmpp.roster[jid]:
-                sub = self.xmpp.roster[jid][bare]['subscription']
-                if sub not in ('from', 'both'):
-                    raise XMPPError('forbidden')
+        if bare != self.xmpp.boundjid.bare and bare in self.xmpp.roster[jid]:
+            sub = self.xmpp.roster[jid][bare]['subscription']
+            if sub not in ('from', 'both'):
+                raise XMPPError('forbidden')
 
         td = datetime.now() - self._last_activities[jid]['seconds']
         seconds = td.seconds + td.days * 24 * 3600

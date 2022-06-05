@@ -17,8 +17,9 @@ class TestElementBase(SlixTest):
                              "{%s}bar" % ns,
                              "{abc}baz",
                              "{%s}more" % ns])
-        self.assertTrue(expected == result,
-            "Incorrect namespace fixing result: %s" % str(result))
+        self.assertTrue(
+            expected == result, f"Incorrect namespace fixing result: {str(result)}"
+        )
 
 
     def testExtendedName(self):
@@ -640,11 +641,10 @@ class TestElementBase(SlixTest):
 
         # Test iterating over substanzas
         stanza.append(substanza1)
-        results = []
-        for substanza in stanza:
-            results.append(substanza['qux'])
-        self.assertTrue(results == ['b', 'a'],
-            "Iteration over substanzas failed: %s." % str(results))
+        results = [substanza['qux'] for substanza in stanza]
+        self.assertTrue(
+            results == ['b', 'a'], f"Iteration over substanzas failed: {results}."
+        )
 
     def testCopy(self):
         """Test copying stanza objects."""
@@ -730,7 +730,7 @@ class TestElementBase(SlixTest):
 
             def set_bar(self, value):
                 if not value.startswith('override-'):
-                    self.parent()._set_attr('bar', 'override-%s' % value)
+                    self.parent()._set_attr('bar', f'override-{value}')
                 else:
                     self.parent()._set_attr('bar', value)
 
@@ -831,10 +831,8 @@ class TestElementBase(SlixTest):
               <baz xmlns="baz" />
             """)
 
-        self.assertEqual(len(bars), 2,
-                "Wrong number of <bar /> stanzas: %s" % len(bars))
-        self.assertEqual(len(bazs), 2,
-                "Wrong number of <baz /> stanzas: %s" % len(bazs))
+        self.assertEqual(len(bars), 2, f"Wrong number of <bar /> stanzas: {len(bars)}")
+        self.assertEqual(len(bazs), 2, f"Wrong number of <baz /> stanzas: {len(bazs)}")
 
     def testSetMultiAttrib(self):
         """Test setting multi_attrib substanzas."""
@@ -872,8 +870,12 @@ class TestElementBase(SlixTest):
           </foo>
         """, use_values=False)
 
-        self.assertEqual(len(stanza['substanzas']), 4,
-            "Wrong number of substanzas: %s" % len(stanza['substanzas']))
+        self.assertEqual(
+            len(stanza['substanzas']),
+            4,
+            f"Wrong number of substanzas: {len(stanza['substanzas'])}",
+        )
+
 
         stanza['bars'] = [TestMultiStanza1()]
 
@@ -885,8 +887,11 @@ class TestElementBase(SlixTest):
           </foo>
         """, use_values=False)
 
-        self.assertEqual(len(stanza['substanzas']), 3,
-            "Wrong number of substanzas: %s" % len(stanza['substanzas']))
+        self.assertEqual(
+            len(stanza['substanzas']),
+            3,
+            f"Wrong number of substanzas: {len(stanza['substanzas'])}",
+        )
 
 
     def testDelMultiAttrib(self):
@@ -937,8 +942,11 @@ class TestElementBase(SlixTest):
           </foo>
         """, use_values=False)
 
-        self.assertEqual(len(stanza['substanzas']), 2,
-            "Wrong number of substanzas: %s" % len(stanza['substanzas']))
+        self.assertEqual(
+            len(stanza['substanzas']),
+            2,
+            f"Wrong number of substanzas: {len(stanza['substanzas'])}",
+        )
 
     def testDefaultLang(self):
         """Test setting a normal subinterface when a default language is set"""
@@ -960,11 +968,18 @@ class TestElementBase(SlixTest):
           </foo>
         """)
 
-        self.assertEqual(stanza['test'], 'hej',
-                "Incorrect subinterface value: %s" % stanza['test'])
+        self.assertEqual(
+            stanza['test'],
+            'hej',
+            f"Incorrect subinterface value: {stanza['test']}",
+        )
 
-        self.assertEqual(stanza['test|sv'], 'hej',
-                "Incorrect subinterface value: %s" % stanza['test|sv'])
+
+        self.assertEqual(
+            stanza['test|sv'],
+            'hej',
+            f"Incorrect subinterface value: {stanza['test|sv']}",
+        )
 
     def testSpecifyLangWithDefault(self):
         """Test specifying various languages."""
@@ -990,17 +1005,32 @@ class TestElementBase(SlixTest):
           </foo>
         """)
 
-        self.assertEqual(stanza['test'], 'hej',
-                "Incorrect subinterface value: %s" % stanza['test'])
+        self.assertEqual(
+            stanza['test'],
+            'hej',
+            f"Incorrect subinterface value: {stanza['test']}",
+        )
 
-        self.assertEqual(stanza['test|sv'], 'hej',
-                "Incorrect subinterface value: %s" % stanza['test|sv'])
 
-        self.assertEqual(stanza['test|en'], 'hi',
-                "Incorrect subinterface value: %s" % stanza['test|en'])
+        self.assertEqual(
+            stanza['test|sv'],
+            'hej',
+            f"Incorrect subinterface value: {stanza['test|sv']}",
+        )
 
-        self.assertEqual(stanza['test|es'], 'hola',
-                "Incorrect subinterface value: %s" % stanza['test|es'])
+
+        self.assertEqual(
+            stanza['test|en'],
+            'hi',
+            f"Incorrect subinterface value: {stanza['test|en']}",
+        )
+
+
+        self.assertEqual(
+            stanza['test|es'],
+            'hola',
+            f"Incorrect subinterface value: {stanza['test|es']}",
+        )
 
     def testSpecifyLangWithNoDefault(self):
         """Test specifying various languages."""
@@ -1025,14 +1055,25 @@ class TestElementBase(SlixTest):
           </foo>
         """)
 
-        self.assertEqual(stanza['test'], 'hej',
-                "Incorrect subinterface value: %s" % stanza['test'])
+        self.assertEqual(
+            stanza['test'],
+            'hej',
+            f"Incorrect subinterface value: {stanza['test']}",
+        )
 
-        self.assertEqual(stanza['test|en'], 'hi',
-                "Incorrect subinterface value: %s" % stanza['test|en'])
 
-        self.assertEqual(stanza['test|es'], 'hola',
-                "Incorrect subinterface value: %s" % stanza['test|es'])
+        self.assertEqual(
+            stanza['test|en'],
+            'hi',
+            f"Incorrect subinterface value: {stanza['test|en']}",
+        )
+
+
+        self.assertEqual(
+            stanza['test|es'],
+            'hola',
+            f"Incorrect subinterface value: {stanza['test|es']}",
+        )
 
     def testModifyLangInterfaceWithDefault(self):
         """Test resetting an interface when a default lang is used."""
@@ -1066,14 +1107,26 @@ class TestElementBase(SlixTest):
           </foo>
         """)
 
-        self.assertEqual(stanza['test'], 'adios',
-                "Incorrect subinterface value: %s" % stanza['test'])
+        self.assertEqual(
+            stanza['test'],
+            'adios',
+            f"Incorrect subinterface value: {stanza['test']}",
+        )
 
-        self.assertEqual(stanza['test|es'], 'adios',
-                "Incorrect subinterface value: %s" % stanza['test|es'])
 
-        self.assertEqual(stanza['test|en'], 'bye',
-                "Incorrect subinterface value: %s" % stanza['test|en'])
+        self.assertEqual(
+            stanza['test|es'],
+            'adios',
+            f"Incorrect subinterface value: {stanza['test|es']}",
+        )
+
+
+        self.assertEqual(
+            stanza['test|en'],
+            'bye',
+            f"Incorrect subinterface value: {stanza['test|en']}",
+        )
+
 
         stanza['test|es'] = 'hola'
 
@@ -1084,11 +1137,18 @@ class TestElementBase(SlixTest):
           </foo>
         """)
 
-        self.assertEqual(stanza['test'], 'hola',
-                "Incorrect subinterface value: %s" % stanza['test'])
+        self.assertEqual(
+            stanza['test'],
+            'hola',
+            f"Incorrect subinterface value: {stanza['test']}",
+        )
 
-        self.assertEqual(stanza['test|es'], 'hola',
-                "Incorrect subinterface value: %s" % stanza['test|es'])
+
+        self.assertEqual(
+            stanza['test|es'],
+            'hola',
+            f"Incorrect subinterface value: {stanza['test|es']}",
+        )
 
     def testModifyLangInterfaceWithNoDefault(self):
         """Test resetting an interface when no default lang is used."""
@@ -1121,14 +1181,25 @@ class TestElementBase(SlixTest):
           </foo>
         """)
 
-        self.assertEqual(stanza['test'], 'adios',
-                "Incorrect subinterface value: %s" % stanza['test'])
+        self.assertEqual(
+            stanza['test'],
+            'adios',
+            f"Incorrect subinterface value: {stanza['test']}",
+        )
 
-        self.assertEqual(stanza['test'], 'adios',
-                "Incorrect subinterface value: %s" % stanza['test|es'])
 
-        self.assertEqual(stanza['test|en'], 'bye',
-                "Incorrect subinterface value: %s" % stanza['test|en'])
+        self.assertEqual(
+            stanza['test'],
+            'adios',
+            f"Incorrect subinterface value: {stanza['test|es']}",
+        )
+
+
+        self.assertEqual(
+            stanza['test|en'],
+            'bye',
+            f"Incorrect subinterface value: {stanza['test|en']}",
+        )
 
     def testDelInterfacesWithDefaultLang(self):
         """Test deleting interfaces with a default lang set."""
@@ -1239,8 +1310,10 @@ class TestElementBase(SlixTest):
 
         data2 = stanza['test|*']
 
-        self.assertEqual(data, data2,
-                "Did not extract expected language data: %s" % data2)
+        self.assertEqual(
+            data, data2, f"Did not extract expected language data: {data2}"
+        )
+
 
         del stanza['test|*']
 

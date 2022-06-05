@@ -64,18 +64,18 @@ class Item(ElementBase):
 
     def set_type(self, value):
         if value and value not in self.type_values:
-            raise ValueError('Unknown type value: %s' % value)
+            raise ValueError(f'Unknown type value: {value}')
         else:
             self._set_attr('type', value)
 
     def set_action(self, value):
         if value not in self.action_values:
-            raise ValueError('Unknown action value: %s' % value)
+            raise ValueError(f'Unknown action value: {value}')
         else:
             self._set_attr('action', value)
 
     def set_presence_in(self, value):
-        keep = True if value else False
+        keep = bool(value)
         self._set_sub_text('presence-in', '', keep=keep)
 
     def get_presence_in(self):
@@ -86,7 +86,7 @@ class Item(ElementBase):
         self._del_sub('{%s}presence-in' % self.namespace)
 
     def set_presence_out(self, value):
-        keep = True if value else False
+        keep = bool(value)
         self._set_sub_text('presence-in', '', keep=keep)
 
     def get_presence_out(self):

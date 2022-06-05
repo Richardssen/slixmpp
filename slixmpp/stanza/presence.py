@@ -71,9 +71,12 @@ class Presence(RootStanza):
         Overrides StanzaBase.__init__.
         """
         StanzaBase.__init__(self, *args, **kwargs)
-        if self['id'] == '':
-            if self.stream is not None and self.stream.use_presence_ids:
-                self['id'] = self.stream.new_id()
+        if (
+            self['id'] == ''
+            and self.stream is not None
+            and self.stream.use_presence_ids
+        ):
+            self['id'] = self.stream.new_id()
 
     def set_show(self, show):
         """

@@ -23,7 +23,7 @@ class Hash(ElementBase):
         elif value in [None, '']:
             self._del_attr('algo')
         else:
-            raise ValueError('Invalid algo: %s' % value)
+            raise ValueError(f'Invalid algo: {value}')
 
     def get_value(self):
         return self.xml.text

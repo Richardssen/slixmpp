@@ -52,8 +52,7 @@ class TestAdHocCommandStanzas(SlixTest):
 
         results = iq['command']['actions']
         expected = {'prev', 'next'}
-        self.assertEqual(results, expected,
-                         "Incorrect next actions: %s" % results)
+        self.assertEqual(results, expected, f"Incorrect next actions: {results}")
 
     def testDelActions(self):
         """Test removing next actions from a command stanza."""

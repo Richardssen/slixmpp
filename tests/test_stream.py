@@ -16,7 +16,7 @@ class TestStreamTester(SlixTest):
         self.stream_start(mode='client')
 
         def echo(msg):
-            msg.reply('Thanks for sending: %s' % msg['body']).send()
+            msg.reply(f"Thanks for sending: {msg['body']}").send()
 
         self.xmpp.add_event_handler('message', echo)
 

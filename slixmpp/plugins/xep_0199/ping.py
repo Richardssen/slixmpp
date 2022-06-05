@@ -116,7 +116,7 @@ class XEP_0199(BasePlugin):
                       "Requesting Reconnect.")
             self.xmpp.reconnect(0.0, "Ping timeout after %ds" % self.timeout)
         else:
-            log.debug('Keepalive RTT: %s' % rtt)
+            log.debug(f'Keepalive RTT: {rtt}')
 
     def _handle_ping(self, iq):
         """Automatically reply to ping requests."""
@@ -157,32 +157,29 @@ class XEP_0199(BasePlugin):
             timeout    -- Time in seconds to wait for a response.
                           Defaults to self.timeout.
         """
-        own_host = False
         if not jid:
-            if self.xmpp.is_component:
-                jid = self.xmpp.server
-            else:
-                jid = self.xmpp.boundjid.host
+            jid = self.xmpp.server if self.xmpp.is_component else self.xmpp.boundjid.host
         jid = JID(jid)
-        if jid == self.xmpp.boundjid.host or \
-                self.xmpp.is_component and jid == self.xmpp.server:
-            own_host = True
+        own_host = bool(
+            jid == self.xmpp.boundjid.host
+            or self.xmpp.is_component
+            and jid == self.xmpp.server
+        )
 
         if not timeout:
             timeout = self.timeout
 
         start = time.time()
 
-        log.debug('Pinging %s' % jid)
+        log.debug(f'Pinging {jid}')
         try:
             await self.send_ping(jid, ifrom=ifrom, timeout=timeout)
         except IqError as e:
-            if own_host:
-                rtt = time.time() - start
-                log.debug('Pinged %s, RTT: %s', jid, rtt)
-                return rtt
-            else:
+            if not own_host:
                 raise e
+            rtt = time.time() - start
+            log.debug('Pinged %s, RTT: %s', jid, rtt)
+            return rtt
         else:
             rtt = time.time() - start
             log.debug('Pinged %s, RTT: %s', jid, rtt)

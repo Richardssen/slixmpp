@@ -55,13 +55,13 @@ class IBBReceiver(slixmpp.ClientXMPP):
         self.get_roster()
 
     def stream_opened(self, stream):
-        print('Stream opened: %s from %s' % (stream.sid, stream.peer_jid))
+        print(f'Stream opened: {stream.sid} from {stream.peer_jid}')
 
     def stream_data(self, stream):
         self.file.write(stream.read())
 
     def stream_closed(self, stream):
-        print('Stream closed: %s from %s' % (stream.sid, stream.peer_jid))
+        print(f'Stream closed: {stream.sid} from {stream.peer_jid}')
         self.file.close()
         self.disconnect()
 

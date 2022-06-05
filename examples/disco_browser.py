@@ -87,31 +87,31 @@ class Disco(slixmpp.ClientXMPP):
                 logging.error("Invalid disco request type.")
                 return
         except IqError as e:
-            logging.error("Entity returned an error: %s" % e.iq['error']['condition'])
+            logging.error(f"Entity returned an error: {e.iq['error']['condition']}")
         except IqTimeout:
             logging.error("No response received.")
         else:
-            header = 'XMPP Service Discovery: %s' % self.target_jid
+            header = f'XMPP Service Discovery: {self.target_jid}'
             print(header)
             print('-' * len(header))
             if self.target_node != '':
-                print('Node: %s' % self.target_node)
+                print(f'Node: {self.target_node}')
                 print('-' * len(header))
 
             if self.get in self.identity_types:
                 print('Identities:')
                 for identity in info['disco_info']['identities']:
-                    print('  - %s' % str(identity))
+                    print(f'  - {str(identity)}')
 
             if self.get in self.feature_types:
                 print('Features:')
                 for feature in info['disco_info']['features']:
-                    print('  - %s' % feature)
+                    print(f'  - {feature}')
 
             if self.get in self.items_types:
                 print('Items:')
                 for item in items['disco_items']['items']:
-                    print('  - %s' % str(item))
+                    print(f'  - {str(item)}')
         finally:
             self.disconnect()
 

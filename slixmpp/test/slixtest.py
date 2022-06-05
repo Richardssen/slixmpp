@@ -131,49 +131,62 @@ class SlixTest(unittest.TestCase):
             string   -- Optional. The string version of the JID.
         """
         if user is not None:
-            self.assertEqual(jid.user, user,
-                    "User does not match: %s" % jid.user)
+            self.assertEqual(jid.user, user, f"User does not match: {jid.user}")
         if domain is not None:
-            self.assertEqual(jid.domain, domain,
-                    "Domain does not match: %s" % jid.domain)
+            self.assertEqual(jid.domain, domain, f"Domain does not match: {jid.domain}")
         if resource is not None:
-            self.assertEqual(jid.resource, resource,
-                    "Resource does not match: %s" % jid.resource)
+            self.assertEqual(
+                jid.resource, resource, f"Resource does not match: {jid.resource}"
+            )
+
         if bare is not None:
-            self.assertEqual(jid.bare, bare,
-                    "Bare JID does not match: %s" % jid.bare)
+            self.assertEqual(jid.bare, bare, f"Bare JID does not match: {jid.bare}")
         if full is not None:
-            self.assertEqual(jid.full, full,
-                    "Full JID does not match: %s" % jid.full)
+            self.assertEqual(jid.full, full, f"Full JID does not match: {jid.full}")
         if string is not None:
-            self.assertEqual(str(jid), string,
-                    "String does not match: %s" % str(jid))
+            self.assertEqual(str(jid), string, f"String does not match: {str(jid)}")
 
     def check_roster(self, owner, jid, name=None, subscription=None,
                      afrom=None, ato=None, pending_out=None, pending_in=None,
                      groups=None):
         roster = self.xmpp.roster[owner][jid]
         if name is not None:
-            self.assertEqual(roster['name'], name,
-                    "Incorrect name value: %s" % roster['name'])
+            self.assertEqual(
+                roster['name'], name, f"Incorrect name value: {roster['name']}"
+            )
+
         if subscription is not None:
-            self.assertEqual(roster['subscription'], subscription,
-                    "Incorrect subscription: %s" % roster['subscription'])
+            self.assertEqual(
+                roster['subscription'],
+                subscription,
+                f"Incorrect subscription: {roster['subscription']}",
+            )
+
         if afrom is not None:
-            self.assertEqual(roster['from'], afrom,
-                    "Incorrect from state: %s" % roster['from'])
+            self.assertEqual(
+                roster['from'], afrom, f"Incorrect from state: {roster['from']}"
+            )
+
         if ato is not None:
-            self.assertEqual(roster['to'], ato,
-                    "Incorrect to state: %s" % roster['to'])
+            self.assertEqual(roster['to'], ato, f"Incorrect to state: {roster['to']}")
         if pending_out is not None:
-            self.assertEqual(roster['pending_out'], pending_out,
-                    "Incorrect pending_out state: %s" % roster['pending_out'])
+            self.assertEqual(
+                roster['pending_out'],
+                pending_out,
+                f"Incorrect pending_out state: {roster['pending_out']}",
+            )
+
         if pending_in is not None:
-            self.assertEqual(roster['pending_in'], pending_out,
-                    "Incorrect pending_in state: %s" % roster['pending_in'])
+            self.assertEqual(
+                roster['pending_in'],
+                pending_out,
+                f"Incorrect pending_in state: {roster['pending_in']}",
+            )
+
         if groups is not None:
-            self.assertEqual(roster['groups'], groups,
-                    "Incorrect groups: %s" % roster['groups'])
+            self.assertEqual(
+                roster['groups'], groups, f"Incorrect groups: {roster['groups']}"
+            )
 
     # ------------------------------------------------------------------
     # Methods for comparing stanza objects to XML strings
@@ -218,7 +231,7 @@ class SlixTest(unittest.TestCase):
                         'mask': MatchXMLMask,
                         'idsender': MatchIDSender,
                         'id': MatcherId}
-            Matcher = matchers.get(method, None)
+            Matcher = matchers.get(method)
             if Matcher is None:
                 raise ValueError("Unknown matching method.")
             test = Matcher(criteria)
@@ -228,10 +241,11 @@ class SlixTest(unittest.TestCase):
                     "Stanza:\n%s" % str(stanza))
         else:
             stanza_class = stanza.__class__
-            if not isinstance(criteria, ElementBase):
-                xml = self.parse_xml(criteria)
-            else:
-                xml = criteria.xml
+            xml = (
+                criteria.xml
+                if isinstance(criteria, ElementBase)
+                else self.parse_xml(criteria)
+            )
 
             # Ensure that top level namespaces are used, even if they
             # were not provided.
@@ -258,10 +272,12 @@ class SlixTest(unittest.TestCase):
                     # Can really only automatically add defaults for top
                     # level attribute values. Anything else must be accounted
                     # for in the provided XML string.
-                    if interface not in xml.attrib:
-                        if interface in default_stanza.xml.attrib:
-                            value = default_stanza.xml.attrib[interface]
-                            xml.attrib[interface] = value
+                    if (
+                        interface not in xml.attrib
+                        and interface in default_stanza.xml.attrib
+                    ):
+                        value = default_stanza.xml.attrib[interface]
+                        xml.attrib[interface] = value
 
                 values = stanza2.values
                 stanza3 = stanza_class()
@@ -405,9 +421,14 @@ class SlixTest(unittest.TestCase):
             parts.append('id="%s"' % sid)
         if default_lang:
             parts.append('xml:lang="%s"' % default_lang)
-        parts.append('version="%s"' % version)
-        parts.append('xmlns:stream="%s"' % stream_ns)
-        parts.append('xmlns="%s"' % default_ns)
+        parts.extend(
+            (
+                'version="%s"' % version,
+                'xmlns:stream="%s"' % stream_ns,
+                'xmlns="%s"' % default_ns,
+            )
+        )
+
         return header % ' '.join(parts)
 
     def recv(self, data, defaults=None, method='exact', use_values=True, timeout=1):
@@ -467,17 +488,14 @@ class SlixTest(unittest.TestCase):
 
         # Apply closing elements so that we can construct
         # XML objects for comparison.
-        header2 = header + '</stream:stream>'
-        recv_header2 = recv_header + '</stream:stream>'
+        header2 = f'{header}</stream:stream>'
+        recv_header2 = f'{recv_header}</stream:stream>'
 
         xml = self.parse_xml(header2)
         recv_xml = self.parse_xml(recv_header2)
 
-        if sid is None:
-            # Ignore the id sent by the server since
-            # we can't know in advance what it will be.
-            if 'id' in recv_xml.attrib:
-                del recv_xml.attrib['id']
+        if sid is None and 'id' in recv_xml.attrib:
+            del recv_xml.attrib['id']
 
         # Ignore the xml:lang attribute for now.
         if 'xml:lang' in recv_xml.attrib:
@@ -497,9 +515,11 @@ class SlixTest(unittest.TestCase):
 
         self.assertTrue(
             self.compare(xml, recv_xml),
-            "Stream headers do not match:\nDesired:\n%s\nReceived:\n%s" % (
-                '%s %s' % (xml.tag, xml.attrib),
-                '%s %s' % (recv_xml.tag, recv_xml.attrib)))
+            (
+                "Stream headers do not match:\nDesired:\n%s\nReceived:\n%s"
+                % (f'{xml.tag} {xml.attrib}', f'{recv_xml.tag} {recv_xml.attrib}')
+            ),
+        )
 
     def recv_feature(self, data, method='mask', use_values=True, timeout=1):
         """
@@ -545,7 +565,7 @@ class SlixTest(unittest.TestCase):
 
         # Apply closing elements so that we can construct
         # XML objects for comparison.
-        header2 = header + '</stream:stream>'
+        header2 = f'{header}</stream:stream>'
         sent_header2 = sent_header + b'</stream:stream>'
 
         xml = self.parse_xml(header2)
@@ -575,7 +595,7 @@ class SlixTest(unittest.TestCase):
                 "Criteria:\n%s\n" % highlight(tostring(xml)) + \
                 "Stanza:\n%s" % highlight(tostring(sent_xml)))
         else:
-            raise ValueError("Uknown matching method: %s" % method)
+            raise ValueError(f"Uknown matching method: {method}")
 
     def send(self, data, defaults=None, use_values=True,
              timeout=.5, method='exact'):
@@ -600,10 +620,10 @@ class SlixTest(unittest.TestCase):
                             Defaults to the value of self.match_method.
         """
         sent = self.xmpp.socket.next_sent(timeout)
-        if data is None and sent is None:
-            return
-        if data is None and sent is not None:
-            self.fail("Stanza data was sent: %s" % sent)
+        if data is None:
+            if sent is None:
+                return
+            self.fail(f"Stanza data was sent: {sent}")
         if sent is None:
             self.fail("No stanza was sent.")
 
@@ -659,11 +679,7 @@ class SlixTest(unittest.TestCase):
 
         # Compare multiple objects
         if len(other) > 1:
-            for xml2 in other:
-                if not self.compare(xml, xml2):
-                    return False
-            return True
-
+            return all(self.compare(xml, xml2) for xml2 in other)
         other = other[0]
 
         # Step 1: Check tags
@@ -691,7 +707,7 @@ class SlixTest(unittest.TestCase):
 
         # Step 5: Recursively check children
         for child in xml:
-            child2s = other.findall("%s" % child.tag)
+            child2s = other.findall(f"{child.tag}")
             if child2s is None:
                 return False
             for child2 in child2s:
@@ -702,7 +718,7 @@ class SlixTest(unittest.TestCase):
 
         # Step 6: Recursively check children the other way.
         for child in other:
-            child2s = xml.findall("%s" % child.tag)
+            child2s = xml.findall(f"{child.tag}")
             if child2s is None:
                 return False
             for child2 in child2s:

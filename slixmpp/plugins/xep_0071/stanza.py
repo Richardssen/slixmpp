@@ -38,7 +38,7 @@ class XHTML_IM(ElementBase):
             header = '<body xmlns="%s"' % XHTML_NS
             if lang:
                 header = '%s xml:lang="%s"' % (header, lang)
-            content = '%s>%s</body>' % (header, content)
+            content = f'{header}>{content}</body>'
             xhtml = ET.fromstring(content)
             self.xml.append(xhtml)
 
@@ -53,21 +53,17 @@ class XHTML_IM(ElementBase):
             result = OrderedDict()
             for body in bodies:
                 body_lang = body.attrib.get('{%s}lang' % self.xml_ns, '')
-                body_result = []
-                body_result.append(body.text if body.text else '')
-                for child in body:
-                    body_result.append(tostring(child, xmlns=XHTML_NS))
-                body_result.append(body.tail if body.tail else '')
+                body_result = [body.text or '']
+                body_result.extend(tostring(child, xmlns=XHTML_NS) for child in body)
+                body_result.append(body.tail or '')
                 result[body_lang] = ''.join(body_result)
             return result
         else:
             for body in bodies:
                 if body.attrib.get('{%s}lang' % self.xml_ns, self.get_lang()) == lang:
-                    result = []
-                    result.append(body.text if body.text else '')
-                    for child in body:
-                        result.append(tostring(child, xmlns=XHTML_NS))
-                    result.append(body.tail if body.tail else '')
+                    result = [body.text or '']
+                    result.extend(tostring(child, xmlns=XHTML_NS) for child in body)
+                    result.append(body.tail or '')
                     return ''.join(result)
         return ''
 

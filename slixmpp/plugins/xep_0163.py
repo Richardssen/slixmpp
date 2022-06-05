@@ -60,8 +60,7 @@ class XEP_0163(BasePlugin):
             namespace = [namespace]
 
         for ns in namespace:
-            self.xmpp['xep_0030'].add_feature('%s+notify' % ns,
-                                              jid=jid)
+            self.xmpp['xep_0030'].add_feature(f'{ns}+notify', jid=jid)
         asyncio.ensure_future(
             self.xmpp['xep_0115'].update_caps(jid),
             loop=self.xmpp.loop,
@@ -82,8 +81,7 @@ class XEP_0163(BasePlugin):
             namespace = [namespace]
 
         for ns in namespace:
-            self.xmpp['xep_0030'].del_feature(jid=jid,
-                                              feature='%s+notify' % namespace)
+            self.xmpp['xep_0030'].del_feature(jid=jid, feature=f'{namespace}+notify')
         asyncio.ensure_future(
             self.xmpp['xep_0115'].update_caps(jid),
             loop=self.xmpp.loop,

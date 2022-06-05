@@ -60,9 +60,12 @@ class Message(RootStanza):
         Overrides StanzaBase.__init__.
         """
         StanzaBase.__init__(self, *args, **kwargs)
-        if self['id'] == '':
-            if self.stream is not None and self.stream.use_message_ids:
-                self['id'] = self.stream.new_id()
+        if (
+            self['id'] == ''
+            and self.stream is not None
+            and self.stream.use_message_ids
+        ):
+            self['id'] = self.stream.new_id()
 
     def get_type(self):
         """
@@ -96,9 +99,8 @@ class Message(RootStanza):
                 thread = ET.Element('{%s}thread' % self.namespace)
                 self.xml.append(thread)
             thread.attrib['parent'] = value
-        else:
-            if thread is not None and 'parent' in thread.attrib:
-                del thread.attrib['parent']
+        elif thread is not None and 'parent' in thread.attrib:
+            del thread.attrib['parent']
 
     def del_parent_thread(self):
         """Delete the message thread's parent reference."""
@@ -153,10 +155,7 @@ class Message(RootStanza):
 
         :rtype: str
         """
-        if self['type'] == 'groupchat':
-            return self['from'].bare
-        else:
-            return ''
+        return self['from'].bare if self['type'] == 'groupchat' else ''
 
     def get_mucnick(self):
         """
@@ -166,10 +165,7 @@ class Message(RootStanza):
 
         :rtype: str
         """
-        if self['type'] == 'groupchat':
-            return self['from'].resource
-        else:
-            return ''
+        return self['from'].resource if self['type'] == 'groupchat' else ''
 
     def set_mucroom(self, value):
         """Dummy method to prevent modification."""

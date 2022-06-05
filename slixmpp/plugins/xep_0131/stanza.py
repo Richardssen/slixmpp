@@ -24,10 +24,7 @@ class Headers(ElementBase):
             name = header.attrib.get('name', '')
             value = header.text
             if name in result:
-                if not isinstance(result[name], set):
-                    result[name] = [result[name]]
-                else:
-                    result[name] = []
+                result[name] = [] if isinstance(result[name], set) else [result[name]]
                 result[name].add(value)
             else:
                 result[name] = value

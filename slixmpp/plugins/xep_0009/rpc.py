@@ -132,12 +132,11 @@ class XEP_0009(BasePlugin):
         if type == 'set':
             log.debug("Incoming Jabber-RPC call from %s", iq['from'])
             self.xmpp.event('jabber_rpc_method_call', iq)
+        elif type == 'error' and ['rpc_query'] is None:
+            self.handle_error(iq)
         else:
-            if type == 'error' and ['rpc_query'] is None:
-                self.handle_error(iq)
-            else:
-                log.debug("Incoming Jabber-RPC error from %s", iq['from'])
-                self.xmpp.event('jabber_rpc_error', iq)
+            log.debug("Incoming Jabber-RPC error from %s", iq['from'])
+            self.xmpp.event('jabber_rpc_error', iq)
 
     def _handle_method_response(self, iq):
         if iq['rpc_query']['method_response']['fault'] is not None:
@@ -218,6 +217,6 @@ class XEP_0009(BasePlugin):
         print("#######################")
 
     def _extract_method(self, stanza):
-        xml = ET.fromstring("%s" % stanza)
+        xml = ET.fromstring(f"{stanza}")
         return xml.find("./methodCall/methodName").text
 

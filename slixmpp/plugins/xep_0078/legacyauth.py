@@ -57,9 +57,7 @@ class XEP_0078(BasePlugin):
 
     def _handle_auth(self, features):
         # If we can or have already authenticated with SASL, do nothing.
-        if 'mechanisms' in features['features']:
-            return False
-        return self.authenticate()
+        return False if 'mechanisms' in features['features'] else self.authenticate()
 
     def _handle_legacy_protocol(self, event):
         self.authenticate()

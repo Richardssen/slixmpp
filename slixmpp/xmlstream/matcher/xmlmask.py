@@ -106,10 +106,11 @@ class MatchXMLMask(MatcherBase):
             matched = False
             for other in source.findall(subelement.tag):
                 matched_elements[other] = False
-                if self._mask_cmp(other, subelement, use_ns):
-                    if not matched_elements.get(other, False):
-                        matched_elements[other] = True
-                        matched = True
+                if self._mask_cmp(
+                    other, subelement, use_ns
+                ) and not matched_elements.get(other, False):
+                    matched_elements[other] = True
+                    matched = True
             if not matched:
                 return False
 

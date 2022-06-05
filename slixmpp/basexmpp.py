@@ -245,24 +245,19 @@ class BaseXMPP(XMLStream):
 
         Plugin configurations stored in :attr:`plugin_config` will be used.
         """
-        if self.plugin_whitelist:
-            plugin_list = self.plugin_whitelist
-        else:
-            plugin_list = plugins.__all__
-
+        plugin_list = self.plugin_whitelist or plugins.__all__
         for plugin in plugin_list:
             if plugin in plugins.__all__:
                 self.register_plugin(plugin)
             else:
-                raise NameError("Plugin %s not in plugins.__all__." % plugin)
+                raise NameError(f"Plugin {plugin} not in plugins.__all__.")
 
     def __getitem__(self, key):
         """Return a plugin given its name, if it has been registered."""
         if key in self.plugin:
             return self.plugin[key]
-        else:
-            log.warning("Plugin '%s' is not loaded.", key)
-            return False
+        log.warning("Plugin '%s' is not loaded.", key)
+        return False
 
     def get(self, key, default):
         """Return a plugin given its name, if it has been registered."""
@@ -638,10 +633,7 @@ class BaseXMPP(XMLStream):
         self.boundjid = JID(jid)
 
     def getjidresource(self, fulljid):
-        if '/' in fulljid:
-            return fulljid.split('/', 1)[-1]
-        else:
-            return ''
+        return fulljid.split('/', 1)[-1] if '/' in fulljid else ''
 
     def getjidbare(self, fulljid):
         return fulljid.split('/', 1)[0]
@@ -671,17 +663,13 @@ class BaseXMPP(XMLStream):
             self._redirect_attempts += 1
 
             host = other_host
-            port = 5222
-
             if '[' in other_host and ']' in other_host:
                 host = other_host.split(']')[0][1:]
             elif ':' in other_host:
                 host = other_host.split(':')[0]
 
             port_sec = other_host.split(']')[-1]
-            if ':' in port_sec:
-                port = int(port_sec.split(':')[1])
-
+            port = int(port_sec.split(':')[1]) if ':' in port_sec else 5222
             self.address = (host, port)
             self.default_domain = host
             self.dns_records = None
@@ -719,11 +707,7 @@ class BaseXMPP(XMLStream):
         """
         roster = self.roster[pres['to']]
         item = self.roster[pres['to']][pres['from']]
-        if item['whitelisted']:
-            item.authorize()
-            if roster.auto_subscribe:
-                item.subscribe()
-        elif roster.auto_authorize:
+        if item['whitelisted'] or roster.auto_authorize:
             item.authorize()
             if roster.auto_subscribe:
                 item.subscribe()
@@ -757,15 +741,17 @@ class BaseXMPP(XMLStream):
             presence['to'] = self.boundjid
 
         self.event('presence', presence)
-        self.event('presence_%s' % presence['type'], presence)
+        self.event(f"presence_{presence['type']}", presence)
 
         # Check for changes in subscription state.
         if presence['type'] in ('subscribe', 'subscribed',
                                 'unsubscribe', 'unsubscribed'):
             self.event('changed_subscription', presence)
             return
-        elif not presence['type'] in ('available', 'unavailable') and \
-             not presence['type'] in presence.showtypes:
+        elif (
+            presence['type'] not in ('available', 'unavailable')
+            and presence['type'] not in presence.showtypes
+        ):
             return
 
     def exception(self, exception):
@@ -784,10 +770,5 @@ class BaseXMPP(XMLStream):
             iq = exception.iq
             log.error('Request timed out: %s', iq)
             log.warning('You should catch IqTimeout exceptions')
-        elif isinstance(exception, SyntaxError):
-            # Hide stream parsing errors that occur when the
-            # stream is disconnected (they've been handled, we
-            # don't need to make a mess in the logs).
-            pass
-        else:
+        elif not isinstance(exception, SyntaxError):
             log.exception(exception)

@@ -215,12 +215,9 @@ def _format_jid(
     """
     if domain is None:
         return ''
-    if local is not None:
-        result = local + '@' + domain
-    else:
-        result = domain
+    result = f'{local}@{domain}' if local is not None else domain
     if resource is not None:
-        result += '/' + resource
+        result += f'/{resource}'
     return result
 
 
@@ -260,11 +257,11 @@ class UnescapedJID:
         """
         if name == 'resource':
             return self._resource or ''
-        if name in ('user', 'username', 'local', 'node'):
+        if name in {'user', 'username', 'local', 'node'}:
             return self._node or ''
-        if name in ('server', 'domain', 'host'):
+        if name in {'server', 'domain', 'host'}:
             return self._domain or ''
-        if name in ('full', 'jid'):
+        if name in {'full', 'jid'}:
             return _format_jid(self._node, self._domain, self._resource)
         if name == 'bare':
             return _format_jid(self._node, self._domain)
@@ -345,12 +342,8 @@ class JID:
     def _update_bare_full(self):
         """Format the given JID into a bare and a full JID.
         """
-        self._bare = (self._node + '@' + self._domain
-                      if self._node
-                      else self._domain)
-        self._full = (self._bare + '/' + self._resource
-                      if self._resource
-                      else self._bare)
+        self._bare = f'{self._node}@{self._domain}' if self._node else self._domain
+        self._full = f'{self._bare}/{self._resource}' if self._resource else self._bare
 
     @property
     def node(self):

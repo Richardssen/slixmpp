@@ -100,7 +100,7 @@ except:
             return not self.__eq__(other)
 
         def __repr__(self):
-            return "%s()" % self.__class__.__name__
+            return f"{self.__class__.__name__}()"
 
         __reduce__ = object.__reduce__
 
@@ -127,9 +127,7 @@ except:
             return not self.__eq__(other)
 
         def __repr__(self):
-            return "%s(%s, %s)" % (self.__class__.__name__,
-                                   repr(self._name),
-                                   self._offset.days*86400+self._offset.seconds)
+            return f"{self.__class__.__name__}({repr(self._name)}, {self._offset.days*86400 + self._offset.seconds})"
 
         __reduce__ = object.__reduce__
 
@@ -145,7 +143,7 @@ except:
         if offsetmins == 0:
             return UTC
 
-        if not offsetmins in _fixed_offset_tzs:
+        if offsetmins not in _fixed_offset_tzs:
             if offsetmins < 0:
                 sign = '-'
                 absoff = -offsetmins
@@ -206,7 +204,7 @@ except:
 
         m = _iso8601_parser.match(timestamp)
         if not m:
-            raise ValueError("Not a proper ISO 8601 timestamp!: %s" % timestamp)
+            raise ValueError(f"Not a proper ISO 8601 timestamp!: {timestamp}")
 
         vals = m.groupdict()
         def_vals = {'year': 1970, 'month': 1, 'day': 1}
@@ -225,7 +223,7 @@ except:
 
         h, min, s, us = None, None, None, 0
         frac = 0
-        if m.group('tzempty') == None and m.group('tzh') == None:
+        if m.group('tzempty') is None and m.group('tzh') is None:
             raise ValueError("Not a proper ISO 8601 timestamp: " +
                     "missing timezone (Z or +hh[:mm])!")
 
@@ -245,12 +243,12 @@ except:
 
         if frac != None:
             # ok, fractions of hour?
-            if min == None:
+            if min is None:
                 frac, min = math.modf(frac * 60.0)
                 min = int(min)
 
             # fractions of second?
-            if s == None:
+            if s is None:
                 frac, s = math.modf(frac * 60.0)
                 s = int(s)
 

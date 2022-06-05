@@ -52,12 +52,12 @@ class AvatarSetter(slixmpp.ClientXMPP):
         try:
             avatar_file = open(os.path.expanduser(self.filepath), 'rb')
         except IOError:
-            print('Could not find file: %s' % self.filepath)
+            print(f'Could not find file: {self.filepath}')
             return self.disconnect()
 
         avatar = avatar_file.read()
 
-        avatar_type = 'image/%s' % imghdr.what('', avatar)
+        avatar_type = f"image/{imghdr.what('', avatar)}"
         avatar_id = self['xep_0084'].generate_id(avatar)
         avatar_bytes = len(avatar)
 

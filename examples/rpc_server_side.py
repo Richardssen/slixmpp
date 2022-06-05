@@ -24,7 +24,7 @@ class Thermostat(Endpoint):
 
     @remote
     def set_temperature(self, temperature):
-        print("Setting temperature to %s" % temperature)
+        print(f"Setting temperature to {temperature}")
         self._temperature = temperature
 
     @remote

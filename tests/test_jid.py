@@ -164,106 +164,97 @@ class TestJIDClass(SlixTest):
         self.assertRaises(InvalidJID, JID, 'user@test.com/')
 
     def test1023LengthDomain(self):
-        domain = ('a.' * 509) + 'a.com'
-        jid = JID('user@%s/resource' % domain)
+        jid = JID(f"user@{'a.' * 509 + 'a.com'}/resource")
 
     def test1023LengthLocalPart(self):
-        local = 'a' * 1023
-        jid = JID('%s@test.com' % local)
+        jid = JID(f"{'a' * 1023}@test.com")
 
     def test1023LengthResource(self):
-        resource = 'r' * 1023
-        jid = JID('test.com/%s' % resource)
+        jid = JID(f"test.com/{'r' * 1023}")
 
     def test1024LengthDomain(self):
         domain = ('a.' * 509) + 'aa.com'
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s' % domain)
-        self.assertRaises(InvalidJID, JID, '%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, f'user@{domain}/resource')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}')
+        self.assertRaises(InvalidJID, JID, f'{domain}/resource')
         self.assertRaises(InvalidJID, JID, domain)
 
     def test1024LengthLocalPart(self):
         local = 'a' * 1024
-        self.assertRaises(InvalidJID, JID, '%s@test.com' % local)
-        self.assertRaises(InvalidJID, JID, '%s@test.com/resource' % local)
+        self.assertRaises(InvalidJID, JID, f'{local}@test.com')
+        self.assertRaises(InvalidJID, JID, f'{local}@test.com/resource')
 
     def test1024LengthResource(self):
         resource = 'r' * 1024
-        self.assertRaises(InvalidJID, JID, 'test.com/%s' % resource)
-        self.assertRaises(InvalidJID, JID, 'user@test.com/%s' % resource)
+        self.assertRaises(InvalidJID, JID, f'test.com/{resource}')
+        self.assertRaises(InvalidJID, JID, f'user@test.com/{resource}')
 
     def testTooLongDomainLabel(self):
-        domain = ('a' * 64) + '.com'
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, f"user@{'a' * 64 + '.com'}/resource")
 
     def testDomainEmptyLabel(self):
-        domain = 'aaa..bbb.com'
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, 'user@aaa..bbb.com/resource')
 
     def testDomainIPv4(self):
         domain = '127.0.0.1'
 
-        jid1 = JID('%s' % domain)
-        jid2 = JID('user@%s' % domain)
-        jid3 = JID('%s/resource' % domain)
-        jid4 = JID('user@%s/resource' % domain)
+        jid1 = JID(f'{domain}')
+        jid2 = JID(f'user@{domain}')
+        jid3 = JID(f'{domain}/resource')
+        jid4 = JID(f'user@{domain}/resource')
 
     def testDomainIPv6(self):
         domain = '[::1]'
 
-        jid1 = JID('%s' % domain)
-        jid2 = JID('user@%s' % domain)
-        jid3 = JID('%s/resource' % domain)
-        jid4 = JID('user@%s/resource' % domain)
+        jid1 = JID(f'{domain}')
+        jid2 = JID(f'user@{domain}')
+        jid3 = JID(f'{domain}/resource')
+        jid4 = JID(f'user@{domain}/resource')
 
     def testDomainInvalidIPv6NoBrackets(self):
         domain = '::1'
 
-        self.assertRaises(InvalidJID, JID, '%s' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s' % domain)
-        self.assertRaises(InvalidJID, JID, '%s/resource' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, f'{domain}')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}')
+        self.assertRaises(InvalidJID, JID, f'{domain}/resource')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}/resource')
 
     def testDomainInvalidIPv6MissingBracket(self):
         domain = '[::1'
 
-        self.assertRaises(InvalidJID, JID, '%s' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s' % domain)
-        self.assertRaises(InvalidJID, JID, '%s/resource' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, f'{domain}')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}')
+        self.assertRaises(InvalidJID, JID, f'{domain}/resource')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}/resource')
 
     def testDomainInvalidIPv6WrongBracket(self):
         domain = '[::]1]'
 
-        self.assertRaises(InvalidJID, JID, '%s' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s' % domain)
-        self.assertRaises(InvalidJID, JID, '%s/resource' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, f'{domain}')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}')
+        self.assertRaises(InvalidJID, JID, f'{domain}/resource')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}/resource')
 
     def testDomainWithPort(self):
         domain = 'example.com:5555'
 
-        self.assertRaises(InvalidJID, JID, '%s' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s' % domain)
-        self.assertRaises(InvalidJID, JID, '%s/resource' % domain)
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, f'{domain}')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}')
+        self.assertRaises(InvalidJID, JID, f'{domain}/resource')
+        self.assertRaises(InvalidJID, JID, f'user@{domain}/resource')
 
     def testDomainWithTrailingDot(self):
-        domain = 'example.com.'
-        jid = JID('user@%s/resource' % domain)
+        jid = JID('user@example.com./resource')
 
         self.assertEqual(jid.domain, 'example.com')
 
     def testDomainWithDashes(self):
-        domain = 'example.com-'
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, 'user@example.com-/resource')
 
-        domain = '-example.com'
-        self.assertRaises(InvalidJID, JID, 'user@%s/resource' % domain)
+        self.assertRaises(InvalidJID, JID, 'user@-example.com/resource')
 
     def testACEDomain(self):
-        domain = 'xn--bcher-kva.ch'
-        jid = JID('user@%s/resource' % domain)
+        jid = JID('user@xn--bcher-kva.ch/resource')
 
         self.assertEqual(jid.domain.encode('utf-8'), b'b\xc3\xbccher.ch')
 
@@ -277,11 +268,9 @@ class TestJIDClass(SlixTest):
         self.assertEqual(ujid.local, 'blah\\foo\\20bar')
 
     def testStartOrEndWithEscapedSpaces(self):
-        local = ' foo'
-        self.assertRaises(InvalidJID, JID, '%s@example.com' % local)
+        self.assertRaises(InvalidJID, JID, ' foo@example.com')
 
-        local = 'bar '
-        self.assertRaises(InvalidJID, JID, '%s@example.com' % local)
+        self.assertRaises(InvalidJID, JID, 'bar @example.com')
 
         # Need more input for these cases. A JID starting with \20 *is* valid
         # according to RFC 6122, but is not according to XEP-0106.

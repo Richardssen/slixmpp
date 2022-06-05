@@ -81,18 +81,18 @@ class ActionBot(slixmpp.ClientXMPP):
         param = iq['action']['param']
 
         if method == 'is_prime' and param == '2':
-            print("got message: %s" % iq)
+            print(f"got message: {iq}")
             rep = iq.reply()
             rep['action']['status'] = 'done'
             await rep.send()
         elif method == 'bye':
-            print("got message: %s" % iq)
+            print(f"got message: {iq}")
             rep = iq.reply()
             rep['action']['status'] = 'done'
             await rep.send()
             self.disconnect()
         else:
-            print("got message: %s" % iq)
+            print(f"got message: {iq}")
             rep = iq.reply()
             rep['action']['status'] = 'error'
             await rep.send()

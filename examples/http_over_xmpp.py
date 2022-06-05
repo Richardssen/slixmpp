@@ -32,14 +32,14 @@ class HTTPOverXMPPClient(ClientXMPP):
         pass
 
     def http_response_received(self, iq):
-        print('HTTP Response Received : %s' % iq)
-        print('From    : %s' %  iq['from'])
-        print('To      : %s' % iq['to'])
-        print('Type    : %s' % iq['type'])
-        print('Headers : %s' % iq['resp']['headers'])
-        print('Code    : %s' % iq['resp']['code'])
-        print('Message : %s' % iq['resp']['message'])
-        print('Data    : %s' % iq['resp']['data'])
+        print(f'HTTP Response Received : {iq}')
+        print(f"From    : {iq['from']}")
+        print(f"To      : {iq['to']}")
+        print(f"Type    : {iq['type']}")
+        print(f"Headers : {iq['resp']['headers']}")
+        print(f"Code    : {iq['resp']['code']}")
+        print(f"Message : {iq['resp']['message']}")
+        print(f"Data    : {iq['resp']['data']}")
 
     def session_start(self, event):
         # TODO: Fill in the blanks

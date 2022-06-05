@@ -123,14 +123,19 @@ async def resolve(host, port=None, service=None, proto='tcp',
     # If no service was provided, then we can just do A/AAAA lookups on the
     # provided host. Otherwise we need to get an ordered list of hosts to
     # resolve based on SRV records.
-    if not service:
-        hosts = [(host, port)]
-    else:
-        hosts = await get_SRV(host, port, service, proto,
-                                   resolver=resolver,
-                                   use_aiodns=use_aiodns)
-        if not hosts:
-            hosts = [(host, port)]
+    hosts = (
+        await get_SRV(
+            host,
+            port,
+            service,
+            proto,
+            resolver=resolver,
+            use_aiodns=use_aiodns,
+        )
+        or [(host, port)]
+        if service
+        else [(host, port)]
+    )
 
     results = []
     for host, port in hosts:
@@ -142,14 +147,10 @@ async def resolve(host, port=None, service=None, proto='tcp',
         if use_ipv6:
             aaaa = await get_AAAA(host, resolver=resolver,
                                        use_aiodns=use_aiodns, loop=loop)
-            for address in aaaa:
-                results.append((host, address, port))
-
+            results.extend((host, address, port) for address in aaaa)
         a = await get_A(host, resolver=resolver,
                              use_aiodns=use_aiodns, loop=loop)
-        for address in a:
-            results.append((host, address, port))
-
+        results.extend((host, address, port) for address in a)
     return results
 
 async def get_A(host, resolver=None, use_aiodns=True, loop=None):
@@ -170,7 +171,7 @@ async def get_A(host, resolver=None, use_aiodns=True, loop=None):
 
     :return: A list of IPv4 literals.
     """
-    log.debug("DNS: Querying %s for A records." % host)
+    log.debug(f"DNS: Querying {host} for A records.")
 
     # If not using aiodns, attempt lookup using the OS level
     # getaddrinfo() method.
@@ -181,7 +182,7 @@ async def get_A(host, resolver=None, use_aiodns=True, loop=None):
                                                type=socket.SOCK_STREAM)
             return [rec[4][0] for rec in recs]
         except socket.gaierror:
-            log.debug("DNS: Error retrieving A address info for %s." % host)
+            log.debug(f"DNS: Error retrieving A address info for {host}.")
             return []
 
     # Using aiodns:
@@ -212,7 +213,7 @@ async def get_AAAA(host, resolver=None, use_aiodns=True, loop=None):
 
     :return: A list of IPv6 literals.
     """
-    log.debug("DNS: Querying %s for AAAA records." % host)
+    log.debug(f"DNS: Querying {host} for AAAA records.")
 
     # If not using aiodns, attempt lookup using the OS level
     # getaddrinfo() method.
@@ -226,8 +227,7 @@ async def get_AAAA(host, resolver=None, use_aiodns=True, loop=None):
                                                type=socket.SOCK_STREAM)
             return [rec[4][0] for rec in recs]
         except (OSError, socket.gaierror):
-            log.debug("DNS: Error retrieving AAAA address " + \
-                      "info for %s." % host)
+            log.debug(("DNS: Error retrieving AAAA address " + f"info for {host}."))
             return []
 
     # Using aiodns:
@@ -269,10 +269,9 @@ async def get_SRV(host, port, service, proto='tcp', resolver=None, use_aiodns=Tr
         log.warning("DNS: aiodns not found. Can not use SRV lookup.")
         return [(host, port)]
 
-    log.debug("DNS: Querying SRV records for %s" % host)
+    log.debug(f"DNS: Querying SRV records for {host}")
     try:
-        future = resolver.query('_%s._%s.%s' % (service, proto, host),
-                                'SRV')
+        future = resolver.query(f'_{service}._{proto}.{host}', 'SRV')
         recs = await future
     except Exception as e:
         log.debug('DNS: Exception while querying for %s SRV records: %s', host, e)

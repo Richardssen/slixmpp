@@ -4,10 +4,7 @@ import hashlib
 
 
 def unicode(text):
-    if not isinstance(text, str):
-        return text.decode('utf-8')
-    else:
-        return text
+    return text if isinstance(text, str) else text.decode('utf-8')
 
 
 def bytes(text):
@@ -64,8 +61,7 @@ def bytes_to_num(bval):
 
     :param bytes bval: A four byte sequence to turn into an integer.
     """
-    num = 0
-    num += ord(bval[0] << 24)
+    num = 0 + ord(bval[0] << 24)
     num += ord(bval[1] << 16)
     num += ord(bval[2] << 8)
     num += ord(bval[3])
@@ -96,7 +92,7 @@ def hash(name):
     """
     name = name.lower()
     if name.startswith('sha-'):
-        name = 'sha' + name[4:]
+        name = f'sha{name[4:]}'
     if name in dir(hashlib):
         return getattr(hashlib, name)
     return None
@@ -108,12 +104,10 @@ def hashes():
 
     :rtype: list of strings
     """
-    t = []
-    if 'md5' in dir(hashlib):
-        t = ['MD5']
+    t = ['MD5'] if 'md5' in dir(hashlib) else []
     if 'md2' in dir(hashlib):
         t += ['MD2']
-    hashes = ['SHA-' + h[3:] for h in dir(hashlib) if h.startswith('sha')]
+    hashes = [f'SHA-{h[3:]}' for h in dir(hashlib) if h.startswith('sha')]
     return t + hashes
 
 

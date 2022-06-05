@@ -289,9 +289,12 @@ class ClientXMPP(BaseXMPP):
 
         :param iq: The roster stanza.
         """
-        if iq['type'] == 'set':
-            if iq['from'].bare and iq['from'].bare != self.boundjid.bare:
-                raise XMPPError(condition='service-unavailable')
+        if (
+            iq['type'] == 'set'
+            and iq['from'].bare
+            and iq['from'].bare != self.boundjid.bare
+        ):
+            raise XMPPError(condition='service-unavailable')
 
         roster = self.client_roster
         if iq['roster']['ver']:

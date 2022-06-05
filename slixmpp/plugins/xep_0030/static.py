@@ -195,13 +195,12 @@ class StaticDisco(object):
 
         The data parameter is not used.
         """
-        if not self.node_exists(jid, node):
-            if not node:
-                return DiscoInfo()
-            else:
-                raise XMPPError(condition='item-not-found')
-        else:
+        if self.node_exists(jid, node):
             return self.get_node(jid, node)['info']
+        if not node:
+            return DiscoInfo()
+        else:
+            raise XMPPError(condition='item-not-found')
 
     def set_info(self, jid, node, ifrom, data):
         """
@@ -227,13 +226,12 @@ class StaticDisco(object):
 
         The data parameter is not used.
         """
-        if not self.node_exists(jid, node):
-            if not node:
-                return DiscoItems()
-            else:
-                raise XMPPError(condition='item-not-found')
-        else:
+        if self.node_exists(jid, node):
             return self.get_node(jid, node)['items']
+        if not node:
+            return DiscoItems()
+        else:
+            raise XMPPError(condition='item-not-found')
 
     def set_items(self, jid, node, ifrom, data):
         """
@@ -402,7 +400,8 @@ class StaticDisco(object):
 
         The data parameter is not used.
         """
-        if not self.node_exists(jid, node, ifrom):
-            return None
-        else:
-            return self.get_node(jid, node, ifrom)['info']
+        return (
+            self.get_node(jid, node, ifrom)['info']
+            if self.node_exists(jid, node, ifrom)
+            else None
+        )

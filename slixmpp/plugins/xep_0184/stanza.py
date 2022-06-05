@@ -26,16 +26,12 @@ class Request(ElementBase):
         if val:
             parent = self.parent()
             parent._set_sub_text("{%s}request" % self.namespace, keep=True)
-            if not parent['id']:
-                if parent.stream:
-                    parent['id'] = parent.stream.new_id()
+            if not parent['id'] and parent.stream:
+                parent['id'] = parent.stream.new_id()
 
     def get_request_receipt(self):
         parent = self.parent()
-        if parent.xml.find("{%s}request" % self.namespace) is not None:
-            return True
-        else:
-            return False
+        return parent.xml.find("{%s}request" % self.namespace) is not None
 
     def del_request_receipt(self):
         self.parent()._del_sub("{%s}request" % self.namespace)

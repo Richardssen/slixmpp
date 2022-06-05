@@ -183,12 +183,12 @@ class XEP_0050(BasePlugin):
 
     def new_session(self):
         """Return a new session ID."""
-        return str(time.time()) + '-' + self.xmpp.new_id()
+        return f'{str(time.time())}-{self.xmpp.new_id()}'
 
     def _handle_command(self, iq):
         """Raise command events based on the command action."""
         self.xmpp.event('command', iq)
-        self.xmpp.event('command_%s' % iq['command']['action'], iq)
+        self.xmpp.event(f"command_{iq['command']['action']}", iq)
 
     def _handle_command_all(self, iq: Iq) -> None:
         action = iq['command']['action']
@@ -223,10 +223,7 @@ class XEP_0050(BasePlugin):
             log.debug('Command not found: %s, %s', key, self.commands)
             raise XMPPError('item-not-found')
 
-        payload = []
-        for stanza in iq['command']['substanzas']:
-            payload.append(stanza)
-
+        payload = list(iq['command']['substanzas'])
         if len(payload) == 1:
             payload = payload[0]
 
@@ -262,15 +259,15 @@ class XEP_0050(BasePlugin):
             iq -- The command continuation request.
         """
         sessionid = iq['command']['sessionid']
-        session = self.sessions.get(sessionid)
-
-        if session:
+        if session := self.sessions.get(sessionid):
             handler = session['next']
             interfaces = session['interfaces']
-            results = []
-            for stanza in iq['command']['substanzas']:
-                if stanza.plugin_attrib in interfaces:
-                    results.append(stanza)
+            results = [
+                stanza
+                for stanza in iq['command']['substanzas']
+                if stanza.plugin_attrib in interfaces
+            ]
+
             if len(results) == 1:
                 results = results[0]
 
@@ -289,15 +286,15 @@ class XEP_0050(BasePlugin):
             iq -- The command continuation request.
         """
         sessionid = iq['command']['sessionid']
-        session = self.sessions.get(sessionid)
-
-        if session:
+        if session := self.sessions.get(sessionid):
             handler = session['prev']
             interfaces = session['interfaces']
-            results = []
-            for stanza in iq['command']['substanzas']:
-                if stanza.plugin_attrib in interfaces:
-                    results.append(stanza)
+            results = [
+                stanza
+                for stanza in iq['command']['substanzas']
+                if stanza.plugin_attrib in interfaces
+            ]
+
             if len(results) == 1:
                 results = results[0]
 
@@ -374,11 +371,8 @@ class XEP_0050(BasePlugin):
         node = iq['command']['node']
         sessionid = iq['command']['sessionid']
 
-        session = self.sessions.get(sessionid)
-
-        if session:
-            handler = session['cancel']
-            if handler:
+        if session := self.sessions.get(sessionid):
+            if handler := session['cancel']:
                 handler(iq, session)
             del self.sessions[sessionid]
             iq = iq.reply()
@@ -403,46 +397,45 @@ class XEP_0050(BasePlugin):
         """
         node = iq['command']['node']
         sessionid = iq['command']['sessionid']
-        session = self.sessions.get(sessionid)
-
-        if session:
-            handler = session['next']
-            interfaces = session['interfaces']
-            results = []
-            for stanza in iq['command']['substanzas']:
-                if stanza.plugin_attrib in interfaces:
-                    results.append(stanza)
-            if len(results) == 1:
-                results = results[0]
-
-            if handler:
-                handler(results, session)
-
-            del self.sessions[sessionid]
-
-            payload = session['payload']
-            if payload is None:
-                payload = []
-            if not isinstance(payload, list):
-                payload = [payload]
-
-            for item in payload:
-                register_stanza_plugin(Command, item.__class__, iterable=True)
-
-            iq = iq.reply()
-
-            iq['command']['node'] = node
-            iq['command']['sessionid'] = sessionid
-            iq['command']['actions'] = []
-            iq['command']['status'] = 'completed'
-            iq['command']['notes'] = session['notes']
-
-            for item in payload:
-                iq['command'].append(item)
-
-            iq.send()
-        else:
+        if not (session := self.sessions.get(sessionid)):
             raise XMPPError('item-not-found')
+        handler = session['next']
+        interfaces = session['interfaces']
+        results = [
+            stanza
+            for stanza in iq['command']['substanzas']
+            if stanza.plugin_attrib in interfaces
+        ]
+
+        if len(results) == 1:
+            results = results[0]
+
+        if handler:
+            handler(results, session)
+
+        del self.sessions[sessionid]
+
+        payload = session['payload']
+        if payload is None:
+            payload = []
+        if not isinstance(payload, list):
+            payload = [payload]
+
+        for item in payload:
+            register_stanza_plugin(Command, item.__class__, iterable=True)
+
+        iq = iq.reply()
+
+        iq['command']['node'] = node
+        iq['command']['sessionid'] = sessionid
+        iq['command']['actions'] = []
+        iq['command']['status'] = 'completed'
+        iq['command']['notes'] = session['notes']
+
+        for item in payload:
+            iq['command'].append(item)
+
+        iq.send()
 
     # =================================================================
     # Client side (command user) API
@@ -626,7 +619,7 @@ class XEP_0050(BasePlugin):
         try:
             del self.sessions[sessionid]
         except Exception as e:
-            log.error("Error deleting adhoc command session: %s" % e.message)
+            log.error(f"Error deleting adhoc command session: {e.message}")
 
     def _handle_command_result(self, iq):
         """
@@ -657,11 +650,8 @@ class XEP_0050(BasePlugin):
         if pending:
             del self.sessions[pendingid]
 
-        handler_type = 'next'
-        if iq['type'] == 'error':
-            handler_type = 'error'
-        handler = session.get(handler_type, None)
-        if handler:
+        handler_type = 'error' if iq['type'] == 'error' else 'next'
+        if handler := session.get(handler_type, None):
             handler(iq, session)
         elif iq['type'] == 'error':
             self.terminate_command(session)

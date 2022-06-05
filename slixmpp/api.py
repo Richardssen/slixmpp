@@ -99,26 +99,24 @@ class APIRegistry(object):
         """
         self._setup(ctype, op)
 
-        if not jid:
+        if not jid or jid and isinstance(jid, JID) and jid == JID(''):
             jid = self.xmpp.boundjid
-        elif jid and not isinstance(jid, JID):
+        elif not isinstance(jid, JID):
             jid = JID(jid)
-        elif jid == JID(''):
-            jid = self.xmpp.boundjid
-
         if node is None:
             node = ''
 
         if self.xmpp.is_component:
-            if self.settings[ctype].get('component_bare', False):
-                jid = jid.bare
-            else:
-                jid = jid.full
+            jid = (
+                jid.bare
+                if self.settings[ctype].get('component_bare', False)
+                else jid.full
+            )
+
+        elif self.settings[ctype].get('client_bare', False):
+            jid = jid.bare
         else:
-            if self.settings[ctype].get('client_bare', False):
-                jid = jid.bare
-            else:
-                jid = jid.full
+            jid = jid.full
 
         jid = JID(jid)
 

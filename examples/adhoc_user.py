@@ -119,8 +119,7 @@ class CommandUserBot(slixmpp.ClientXMPP):
                        session. Additional, custom data may be saved
                        here to persist across handler callbacks.
         """
-        logging.error("COMMAND: %s %s" % (iq['error']['condition'],
-                                          iq['error']['text']))
+        logging.error(f"COMMAND: {iq['error']['condition']} {iq['error']['text']}")
 
         # Terminate the command's execution and clear its session.
         # The session will automatically be cleared if no error

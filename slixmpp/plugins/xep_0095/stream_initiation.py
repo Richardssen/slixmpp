@@ -99,9 +99,7 @@ class XEP_0095(BasePlugin):
 
         neg = iq['si']['feature_neg']['form'].get_fields()
         options = neg['stream-method']['options'] or []
-        methods = []
-        for opt in options:
-            methods.append(opt['value'])
+        methods = [opt['value'] for opt in options]
         for method in methods:
             if method in self._methods:
                 supported = True
@@ -180,9 +178,10 @@ class XEP_0095(BasePlugin):
         self.api['del_pending'](ifrom, sid, jid)
 
         if stream_handler:
-            self.xmpp.add_event_handler('stream:%s:%s' % (sid, jid),
-                    stream_handler,
-                    disposable=True)
+            self.xmpp.add_event_handler(
+                f'stream:{sid}:{jid}', stream_handler, disposable=True
+            )
+
         return iq.send()
 
     def decline(self, jid, sid, ifrom=None):

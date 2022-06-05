@@ -373,9 +373,8 @@ class XEP_0030(BasePlugin):
                 if self.xmpp.is_component:
                     if jid.domain == self.xmpp.boundjid.domain:
                         local = True
-                else:
-                    if str(jid) == str(self.xmpp.boundjid):
-                        local = True
+                elif str(jid) == str(self.xmpp.boundjid):
+                    local = True
                 jid = jid.full
             elif jid in (None, ''):
                 local = True
@@ -403,7 +402,7 @@ class XEP_0030(BasePlugin):
         iq['from'] = kwargs.get('ifrom', kwargs.get('dfrom', ''))
         iq['to'] = jid
         iq['type'] = 'get'
-        iq['disco_info']['node'] = node if node else ''
+        iq['disco_info']['node'] = node or ''
         return iq.send(timeout=kwargs.get('timeout', None),
                        callback=kwargs.get('callback', None),
                        timeout_callback=kwargs.get('timeout_callback', None))
@@ -461,10 +460,9 @@ class XEP_0030(BasePlugin):
         iq['from'] = kwargs.get('ifrom', kwargs.get('dfrom', ''))
         iq['to'] = jid
         iq['type'] = 'get'
-        iq['disco_items']['node'] = node if node else ''
+        iq['disco_items']['node'] = node or ''
         if kwargs.get('iterator', False) and self.xmpp['xep_0059']:
             raise NotImplementedError("XEP 0059 has not yet been fixed")
-            return self.xmpp['xep_0059'].iterate(iq, 'disco_items')
         else:
             return iq.send(timeout=kwargs.get('timeout', None),
                            callback=kwargs.get('callback', None),
@@ -693,10 +691,7 @@ class XEP_0030(BasePlugin):
             if self.use_cache:
                 log.debug("Caching disco info result from " \
                       "<%s> to <%s>.", iq['from'], iq['to'])
-                if self.xmpp.is_component:
-                    ito = iq['to'].full
-                else:
-                    ito = None
+                ito = iq['to'].full if self.xmpp.is_component else None
                 self.api['cache_info'](iq['from'],
                                        iq['disco_info']['node'],
                                        ito,

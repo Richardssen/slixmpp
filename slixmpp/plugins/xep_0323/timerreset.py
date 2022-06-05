@@ -60,10 +60,6 @@ class _TimerReset(Thread):
         if interval:
             #print "Time: %s - timer resetting to %.2f..." % (time.asctime(), interval)
             self.interval = interval
-        else:
-            #print "Time: %s - timer resetting..." % time.asctime()
-            pass
-
         self.resetted = True
         self.finished.set()
         self.finished.clear()

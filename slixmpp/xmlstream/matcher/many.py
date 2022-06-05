@@ -34,7 +34,4 @@ class MatchMany(MatcherBase):
         Arguments:
             xml -- The stanza object to compare against.
         """
-        for m in self._criteria:
-            if m.match(xml):
-                return True
-        return False
+        return any(m.match(xml) for m in self._criteria)

@@ -74,7 +74,6 @@ class XEP_0319(BasePlugin):
 
     def _stamp_idle_presence(self, stanza):
         if isinstance(stanza, Presence):
-            since = self.api['get_idle'](stanza['from'] or self.xmpp.boundjid)
-            if since:
+            if since := self.api['get_idle'](stanza['from'] or self.xmpp.boundjid):
                 stanza['idle']['since'] = since
         return stanza

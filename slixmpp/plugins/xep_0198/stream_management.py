@@ -203,7 +203,7 @@ class XEP_0198(BasePlugin):
                             MatchXPath(stanza.Failed.tag_name())]))
                 self.xmpp.register_handler(waiter)
                 result = await waiter.wait()
-        elif self.sm_id and self.allow_resume and 'bind' not in self.xmpp.features:
+        elif self.allow_resume and 'bind' not in self.xmpp.features:
             self.enabled = True
             resume = stanza.Resume(self.xmpp)
             resume['h'] = self.handled
@@ -278,7 +278,7 @@ class XEP_0198(BasePlugin):
             log.error('Inconsistent sequence numbers from the server,'
                       ' ignoring and replacing ours with them.')
             num_acked = len(self.unacked_queue)
-        for x in range(num_acked):
+        for _ in range(num_acked):
             seq, stanza = self.unacked_queue.popleft()
             self.xmpp.event('stanza_acked', stanza)
         self.last_ack = ack['h']

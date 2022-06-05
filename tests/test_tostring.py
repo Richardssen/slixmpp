@@ -20,22 +20,20 @@ class TestToString(SlixTest):
         """
         if not expected:
             expected=original
-        if isinstance(original, str):
-            xml = ET.fromstring(original)
-        else:
-            xml=original
+        xml = ET.fromstring(original) if isinstance(original, str) else original
         result = tostring(xml, **kwargs)
-        self.assertTrue(result == expected, "%s: %s" % (message, result))
+        self.assertTrue(result == expected, f"{message}: {result}")
 
     def testXMLEscape(self):
         """Test escaping XML special characters."""
         original = """<foo bar="baz">'Hi & welcome!'</foo>"""
         escaped = escape(original)
-        desired = """&lt;foo bar=&quot;baz&quot;&gt;&apos;Hi"""
-        desired += """ &amp; welcome!&apos;&lt;/foo&gt;"""
+        desired = (
+            """&lt;foo bar=&quot;baz&quot;&gt;&apos;Hi"""
+            + """ &amp; welcome!&apos;&lt;/foo&gt;"""
+        )
 
-        self.assertTrue(escaped == desired,
-            "XML escaping did not work: %s." % escaped)
+        self.assertTrue(escaped == desired, f"XML escaping did not work: {escaped}.")
 
     def testEmptyElement(self):
         """Test converting an empty element to a string."""
@@ -99,8 +97,9 @@ class TestToString(SlixTest):
         msg['body'] = utf8_message.decode('utf-8')
         expected = '<message><body>\xe0\xb2\xa0_\xe0\xb2\xa0</body></message>'
         result = msg.__str__()
-        self.assertTrue(result == expected,
-             "Stanza Unicode handling is incorrect: %s" % result)
+        self.assertTrue(
+            result == expected, f"Stanza Unicode handling is incorrect: {result}"
+        )
 
     def testXMLLang(self):
         """Test that serializing xml:lang works."""
@@ -112,8 +111,9 @@ class TestToString(SlixTest):
 
         expected = '<message xml:lang="no" />'
         result = msg.__str__()
-        self.assertTrue(expected == result,
-            "Serialization with xml:lang failed: %s" % result)
+        self.assertTrue(
+            expected == result, f"Serialization with xml:lang failed: {result}"
+        )
 
 
 suite = unittest.TestLoader().loadTestsFromTestCase(TestToString)

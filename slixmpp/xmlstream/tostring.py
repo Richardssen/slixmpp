@@ -49,11 +49,7 @@ def tostring(xml=None, xmlns='', stream=None, outbuffer='',
     tag_name = tag_split[-1]
 
     # Extract the element's namespace if it is defined.
-    if '}' in xml.tag:
-        tag_xmlns = tag_split[0][1:]
-    else:
-        tag_xmlns = ''
-
+    tag_xmlns = tag_split[0][1:] if '}' in xml.tag else ''
     default_ns = ''
     stream_ns = ''
     use_cdata = False
@@ -65,17 +61,17 @@ def tostring(xml=None, xmlns='', stream=None, outbuffer='',
 
     # Output the tag name and derived namespace of the element.
     namespace = ''
-    if tag_xmlns:
-        if top_level and tag_xmlns not in [default_ns, xmlns, stream_ns] \
-          or not top_level and tag_xmlns != xmlns:
-            namespace = ' xmlns="%s"' % tag_xmlns
+    if tag_xmlns and (
+        top_level
+        and tag_xmlns not in [default_ns, xmlns, stream_ns]
+        or not top_level
+        and tag_xmlns != xmlns
+    ):
+        namespace = ' xmlns="%s"' % tag_xmlns
     if stream and tag_xmlns in stream.namespace_map:
-        mapped_namespace = stream.namespace_map[tag_xmlns]
-        if mapped_namespace:
-            tag_name = "%s:%s" % (mapped_namespace, tag_name)
-    output.append("<%s" % tag_name)
-    output.append(namespace)
-
+        if mapped_namespace := stream.namespace_map[tag_xmlns]:
+            tag_name = f"{mapped_namespace}:{tag_name}"
+    output.extend((f"<{tag_name}", namespace))
     # Output escaped attribute values.
     new_namespaces = set()
     for attrib, value in xml.attrib.items():
@@ -89,8 +85,7 @@ def tostring(xml=None, xmlns='', stream=None, outbuffer='',
             if attrib_ns == XML_NS:
                 output.append(' xml:%s="%s"' % (attrib, value))
             elif stream and attrib_ns in stream.namespace_map:
-                mapped_ns = stream.namespace_map[attrib_ns]
-                if mapped_ns:
+                if mapped_ns := stream.namespace_map[attrib_ns]:
                     if namespaces is None:
                         namespaces = set()
                     if attrib_ns not in namespaces:
@@ -112,13 +107,12 @@ def tostring(xml=None, xmlns='', stream=None, outbuffer='',
         if xml.text:
             output.append(escape(xml.text, use_cdata))
         if len(xml):
-            for child in xml:
-                output.append(tostring(child, tag_xmlns, stream,
-                    namespaces=namespaces))
-        output.append("</%s>" % tag_name)
-    elif xml.text:
-        # If we only have text content.
-        output.append(">%s</%s>" % (escape(xml.text, use_cdata), tag_name))
+            output.extend(
+                tostring(child, tag_xmlns, stream, namespaces=namespaces)
+                for child in xml
+            )
+
+        output.append(f"</{tag_name}>")
     else:
         # Empty element.
         output.append(" />")
@@ -147,16 +141,11 @@ def escape(text, use_cdata=False):
 
     if not use_cdata:
         return ''.join(escapes.get(c, c) for c in text)
-    else:
-        escape_needed = False
-        for c in text:
-            if c in escapes:
-                escape_needed = True
-                break
-        if escape_needed:
-            escaped = map(lambda x : "<![CDATA[%s]]>" % x, text.split("]]>"))
-            return "<![CDATA[]]]><![CDATA[]>]]>".join(escaped)
-        return text
+    escape_needed = any(c in escapes for c in text)
+    if escape_needed:
+        escaped = map(lambda x: f"<![CDATA[{x}]]>", text.split("]]>"))
+        return "<![CDATA[]]]><![CDATA[]>]]>".join(escaped)
+    return text
 
 
 def _get_highlight():

@@ -93,14 +93,12 @@ class Geoloc(ElementBase):
         """
         Return the value of the <accuracy> element as an integer.
         """
-        p = self._get_sub_text('accuracy')
-        if not p:
+        if not (p := self._get_sub_text('accuracy')):
             return None
-        else:
-            try:
-                return int(p)
-            except ValueError:
-                return None
+        try:
+            return int(p)
+        except ValueError:
+            return None
 
     def set_alt(self, alt):
         """
@@ -116,14 +114,12 @@ class Geoloc(ElementBase):
         """
         Return the value of the <alt> element as an integer.
         """
-        p = self._get_sub_text('alt')
-        if not p:
+        if not (p := self._get_sub_text('alt')):
             return None
-        else:
-            try:
-                return int(p)
-            except ValueError:
-                return None
+        try:
+            return int(p)
+        except ValueError:
+            return None
 
     def set_bearing(self, bearing):
         """
@@ -141,14 +137,12 @@ class Geoloc(ElementBase):
         """
         Return the value of the <bearing> element as a float.
         """
-        p = self._get_sub_text('bearing')
-        if not p:
+        if not (p := self._get_sub_text('bearing')):
             return None
-        else:
-            try:
-                return float(p)
-            except ValueError:
-                return None
+        try:
+            return float(p)
+        except ValueError:
+            return None
 
     def set_error(self, error):
         """
@@ -165,14 +159,12 @@ class Geoloc(ElementBase):
         """
         Return the value of the <error> element as a float.
         """
-        p = self._get_sub_text('error')
-        if not p:
+        if not (p := self._get_sub_text('error')):
             return None
-        else:
-            try:
-                return float(p)
-            except ValueError:
-                return None
+        try:
+            return float(p)
+        except ValueError:
+            return None
 
     def set_lat(self, lat):
         """
@@ -188,14 +180,12 @@ class Geoloc(ElementBase):
         """
         Return the value of the <lat> element as a float.
         """
-        p = self._get_sub_text('lat')
-        if not p:
+        if not (p := self._get_sub_text('lat')):
             return None
-        else:
-            try:
-                return float(p)
-            except ValueError:
-                return None
+        try:
+            return float(p)
+        except ValueError:
+            return None
 
     def set_lon(self, lon):
         """
@@ -211,14 +201,12 @@ class Geoloc(ElementBase):
         """
         Return the value of the <lon> element as a float.
         """
-        p = self._get_sub_text('lon')
-        if not p:
+        if not (p := self._get_sub_text('lon')):
             return None
-        else:
-            try:
-                return float(p)
-            except ValueError:
-                return None
+        try:
+            return float(p)
+        except ValueError:
+            return None
 
     def set_speed(self, speed):
         """
@@ -235,14 +223,12 @@ class Geoloc(ElementBase):
         """
         Return the value of the <speed> element as a float.
         """
-        p = self._get_sub_text('speed')
-        if not p:
+        if not (p := self._get_sub_text('speed')):
             return None
-        else:
-            try:
-                return float(p)
-            except ValueError:
-                return None
+        try:
+            return float(p)
+        except ValueError:
+            return None
 
     def set_timestamp(self, timestamp):
         """
@@ -260,7 +246,4 @@ class Geoloc(ElementBase):
         Return the value of the <timestamp> element as a DateTime.
         """
         p = self._get_sub_text('timestamp')
-        if not p:
-            return None
-        else:
-            return xep_0082.datetime(p)
+        return xep_0082.datetime(p) if p else None

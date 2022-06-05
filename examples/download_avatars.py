@@ -70,25 +70,23 @@ class AvatarDownloader(slixmpp.ClientXMPP):
         self.disconnect()
 
     async def on_vcard_avatar(self, pres):
-        print("Received vCard avatar update from %s" % pres['from'].bare)
+        print(f"Received vCard avatar update from {pres['from'].bare}")
         try:
             result = await self['xep_0054'].get_vcard(pres['from'].bare, cached=True,
                                                            timeout=5)
         except XMPPError:
-            print("Error retrieving avatar for %s" % pres['from'])
+            print(f"Error retrieving avatar for {pres['from']}")
             return
         avatar = result['vcard_temp']['PHOTO']
 
         filetype = FILE_TYPES.get(avatar['TYPE'], 'png')
-        filename = 'vcard_avatar_%s_%s.%s' % (
-                pres['from'].bare,
-                pres['vcard_temp_update']['photo'],
-                filetype)
+        filename = f"vcard_avatar_{pres['from'].bare}_{pres['vcard_temp_update']['photo']}.{filetype}"
+
         with open(filename, 'wb+') as img:
             img.write(avatar['BINVAL'])
 
     async def on_avatar(self, msg):
-        print("Received avatar update from %s" % msg['from'])
+        print(f"Received avatar update from {msg['from']}")
         metadata = msg['pubsub_event']['items']['item']['avatar_metadata']
         for info in metadata['items']:
             if not info['url']:
@@ -96,18 +94,15 @@ class AvatarDownloader(slixmpp.ClientXMPP):
                     result = await self['xep_0084'].retrieve_avatar(msg['from'].bare, info['id'],
                                                                          timeout=5)
                 except XMPPError:
-                    print("Error retrieving avatar for %s" % msg['from'])
+                    print(f"Error retrieving avatar for {msg['from']}")
                     return
 
                 avatar = result['pubsub']['items']['item']['avatar_data']
 
                 filetype = FILE_TYPES.get(metadata['type'], 'png')
-                filename = 'avatar_%s_%s.%s' % (msg['from'].bare, info['id'], filetype)
+                filename = f"avatar_{msg['from'].bare}_{info['id']}.{filetype}"
                 with open(filename, 'wb+') as img:
                     img.write(avatar['value'])
-            else:
-                # We could retrieve the avatar via HTTP, etc here instead.
-                pass
 
     def wait_for_presences(self, pres):
         """

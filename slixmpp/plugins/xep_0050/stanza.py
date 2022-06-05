@@ -135,12 +135,8 @@ class Command(ElementBase):
              ('warning', 'Use caution'),
              ('error', 'The command ran, but had errors')]
         """
-        notes = []
         notes_xml = self.xml.findall('{%s}note' % self.namespace)
-        for note in notes_xml:
-            notes.append((note.attrib.get('type', 'info'),
-                          note.text))
-        return notes
+        return [(note.attrib.get('type', 'info'), note.text) for note in notes_xml]
 
     def set_notes(self, notes):
         """

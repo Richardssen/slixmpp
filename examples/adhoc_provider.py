@@ -115,9 +115,10 @@ class CommandBot(slixmpp.ClientXMPP):
 
         greeting = form['values']['greeting']
 
-        self.send_message(mto=session['from'],
-                          mbody="%s, World!" % greeting,
-                          mtype='chat')
+        self.send_message(
+            mto=session['from'], mbody=f"{greeting}, World!", mtype='chat'
+        )
+
 
         # Having no return statement is the same as unsetting the 'payload'
         # and 'next' session values and returning the session.

@@ -102,10 +102,7 @@ class XEP_0153(BasePlugin):
         try:
             vcard = await self.xmpp['xep_0054'].get_vcard(self.xmpp.boundjid.bare)
             data = vcard['vcard_temp']['PHOTO']['BINVAL']
-            if not data:
-                new_hash = ''
-            else:
-                new_hash = hashlib.sha1(data).hexdigest()
+            new_hash = hashlib.sha1(data).hexdigest() if data else ''
             self.api['set_hash'](self.xmpp.boundjid, args=new_hash)
         except XMPPError:
             log.debug('Could not retrieve vCard for %s', self.xmpp.boundjid.bare)
@@ -142,11 +139,7 @@ class XEP_0153(BasePlugin):
             except ValueError:
                 log.debug('Invalid BINVAL in vCard’s PHOTO for %s:', jid, exc_info=True)
                 data = None
-            if not data:
-                new_hash = ''
-            else:
-                new_hash = hashlib.sha1(data).hexdigest()
-
+            new_hash = hashlib.sha1(data).hexdigest() if data else ''
             self.api['set_hash'](jid, args=new_hash)
 
         self.xmpp['xep_0054'].get_vcard(jid=jid.bare, ifrom=ifrom,

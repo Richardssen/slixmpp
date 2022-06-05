@@ -69,14 +69,10 @@ class MailThread(ElementBase):
     sub_interfaces = set(['labels', 'subject', 'snippet'])
 
     def get_senders(self):
-        result = []
         senders = self.xml.findall('{%s}senders/{%s}sender' % (
             self.namespace, self.namespace))
 
-        for sender in senders:
-            result.append(MailSender(xml=sender))
-
-        return result
+        return [MailSender(xml=sender) for sender in senders]
 
 
 class MailSender(ElementBase):

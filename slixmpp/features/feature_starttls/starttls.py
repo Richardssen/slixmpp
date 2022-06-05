@@ -48,15 +48,12 @@ class FeatureSTARTTLS(BasePlugin):
         Arguments:
             features -- The stream:features element.
         """
-        if 'starttls' in self.xmpp.features:
+        if 'starttls' in self.xmpp.features or self.xmpp.disable_starttls:
             # We have already negotiated TLS, but the server is
             # offering it again, against spec.
             return False
-        elif self.xmpp.disable_starttls:
-            return False
-        else:
-            self.xmpp.send(features['starttls'])
-            return True
+        self.xmpp.send(features['starttls'])
+        return True
 
     async def _handle_starttls_proceed(self, proceed):
         """Restart the XML stream when TLS is accepted."""

@@ -91,7 +91,7 @@ class DiscoInfo(ElementBase):
         """
         ElementBase.setup(self, xml)
 
-        self._identities = {id[0:3] for id in self['identities']}
+        self._identities = {id[:3] for id in self['identities']}
         self._features = self['features']
 
     def add_identity(self, category, itype, name=None, lang=None):
@@ -159,10 +159,7 @@ class DiscoInfo(ElementBase):
             dedupe -- If True, de-duplicate identities, otherwise
                       return a list of all identities.
         """
-        if dedupe:
-            identities = set()
-        else:
-            identities = []
+        identities = set() if dedupe else []
         for id_xml in self.xml.findall('{%s}identity' % self.namespace):
             xml_lang = id_xml.attrib.get('{%s}lang' % self.xml_ns, None)
             if lang is None or xml_lang == lang:
@@ -247,10 +244,7 @@ class DiscoInfo(ElementBase):
 
     def get_features(self, dedupe=True):
         """Return the set of all supported features."""
-        if dedupe:
-            features = set()
-        else:
-            features = []
+        features = set() if dedupe else []
         for feature_xml in self.xml.findall('{%s}feature' % self.namespace):
             if dedupe:
                 features.add(feature_xml.attrib['var'])

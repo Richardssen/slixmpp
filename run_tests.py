@@ -16,10 +16,11 @@ def run_tests(filenames=None):
 
     Excludes live tests (tests/live_*).
     """
-    if not filenames:
-        filenames = [i for i in Path('tests').glob('test_*')]
-    else:
-        filenames = [Path(i) for i in filenames]
+    filenames = (
+        [Path(i) for i in filenames]
+        if filenames
+        else list(Path('tests').glob('test_*'))
+    )
 
     modules = ['.'.join(test.parts[:-1] + (test.stem,)) for test in filenames]
 
@@ -35,8 +36,7 @@ def run_tests(filenames=None):
     logging.basicConfig(level=100)
     logging.disable(100)
 
-    result = runner.run(tests)
-    return result
+    return runner.run(tests)
 
 
 # Add a 'test' command for setup.py

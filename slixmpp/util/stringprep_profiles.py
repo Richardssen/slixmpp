@@ -75,7 +75,7 @@ def prohibit_output(data, tables=None):
     for char in data:
         for check in tables:
             if check(char):
-                raise StringPrepError("Prohibited code point: %s" % char)
+                raise StringPrepError(f"Prohibited code point: {char}")
 
 
 def check_bidi(data):

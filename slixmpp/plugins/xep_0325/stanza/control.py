@@ -83,11 +83,7 @@ class ControlSet(ElementBase):
 
     def get_nodes(self):
         """Return all nodes."""
-        nodes = []
-        for node in self['substanzas']:
-            if isinstance(node, RequestNode):
-                nodes.append(node)
-        return nodes
+        return [node for node in self['substanzas'] if isinstance(node, RequestNode)]
 
     def set_nodes(self, nodes):
         """
@@ -175,11 +171,7 @@ class ControlSet(ElementBase):
 
     def get_datas(self):
         """ Return all data elements. """
-        datas = []
-        for data in self['substanzas']:
-            if isinstance(data, BaseParameter):
-                datas.append(data)
-        return datas
+        return [data for data in self['substanzas'] if isinstance(data, BaseParameter)]
 
     def set_datas(self, datas):
         """
@@ -274,11 +266,7 @@ class ControlSetResponse(ElementBase):
 
     def get_nodes(self):
         """Return all nodes."""
-        nodes = []
-        for node in self['substanzas']:
-            if isinstance(node, RequestNode):
-                nodes.append(node)
-        return nodes
+        return [node for node in self['substanzas'] if isinstance(node, RequestNode)]
 
     def set_nodes(self, nodes):
         """
@@ -339,11 +327,11 @@ class ControlSetResponse(ElementBase):
 
     def get_datas(self):
         """ Return all ResponseParameter elements. """
-        datas = set()
-        for data in self['substanzas']:
-            if isinstance(data, ResponseParameter):
-                datas.add(data)
-        return datas
+        return {
+            data
+            for data in self['substanzas']
+            if isinstance(data, ResponseParameter)
+        }
 
     def set_datas(self, datas):
         """

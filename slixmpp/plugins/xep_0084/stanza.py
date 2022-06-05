@@ -19,15 +19,10 @@ class Data(ElementBase):
     interfaces = {'value'}
 
     def get_value(self):
-        if self.xml.text:
-            return b64decode(bytes(self.xml.text))
-        return b''
+        return b64decode(bytes(self.xml.text)) if self.xml.text else b''
 
     def set_value(self, value):
-        if value:
-            self.xml.text = b64encode(bytes(value)).decode()
-        else:
-            self.xml.text = ''
+        self.xml.text = b64encode(bytes(value)).decode() if value else ''
 
     def del_value(self):
         self.xml.text = ''
@@ -41,12 +36,15 @@ class MetaData(ElementBase):
 
     def add_info(self, id, itype, ibytes, height=None, width=None, url=None):
         info = Info()
-        info.values = {'id': id,
-                       'type': itype,
-                       'bytes': '%s' % ibytes,
-                       'height': height,
-                       'width': width,
-                       'url': url}
+        info.values = {
+            'id': id,
+            'type': itype,
+            'bytes': f'{ibytes}',
+            'height': height,
+            'width': width,
+            'url': url,
+        }
+
         self.append(info)
 
     def add_pointer(self, xml):

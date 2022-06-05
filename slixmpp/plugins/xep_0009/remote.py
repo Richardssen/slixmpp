@@ -56,12 +56,18 @@ def _intercept(method, name, public):
         try:
             value = method(instance, *args, **kwargs)
             if value == NotImplemented:
-                raise InvocationException("Local handler does not implement %s.%s!" % (instance.FQN(), method.__name__))
+                raise InvocationException(
+                    f"Local handler does not implement {instance.FQN()}.{method.__name__}!"
+                )
+
             return value
         except InvocationException:
             raise
         except Exception as e:
-            raise InvocationException("A problem occurred calling %s.%s!" % (instance.FQN(), method.__name__), e)
+            raise InvocationException(
+                f"A problem occurred calling {instance.FQN()}.{method.__name__}!",
+                e,
+            )
     _resolver._rpc = public
     _resolver._rpc_name = method.__name__ if name is None else name
     return _resolver
@@ -164,13 +170,12 @@ class ACL:
     @classmethod
     def _next_token(cls, expression, index):
         new_index = expression.xml.find('*', index)
-        if new_index == 0:
+        if new_index == -1:
+            return expression[index : ]
+        elif new_index == 0:
             return ''
         else:
-            if new_index == -1:
-                return expression[index : ]
-            else:
-                return expression[index : new_index]
+            return expression[index : new_index]
 
     @classmethod
     def _match(cls, value, expression):
@@ -188,11 +193,7 @@ class ACL:
                 else:
                     #! print "[INDEX-OF] %s" % token_index
                     position = token_index + len(token)
-                pass
-            if size == 0:
-                index += 1
-            else:
-                index += size
+            index += 1 if size == 0 else size
         #! print "index %s position %s" % (index, position)
         return True
 
@@ -215,7 +216,6 @@ class RemoteException(Exception):
         '''
         self._message = message
         self._cause = cause
-        pass
 
     def __str__(self):
         return repr(self._message)
@@ -281,7 +281,6 @@ class Future(Callback):
         self._value = None
         self._exception = None
         self._event = threading.Event()
-        pass
 
     def set_value(self, value):
         '''
@@ -375,7 +374,7 @@ class Endpoint(object):
                     @remote(False)
                     def some_hidden_method(arg1, arg2)
         '''
-        result = dict()
+        result = {}
         for function in dir(self):
             test_attr = getattr(self, function, None)
             try:
@@ -416,7 +415,13 @@ class Proxy(Endpoint):
                     if attribute._rpc:
                         def _remote_call(*args, **kwargs):
                             log.debug("Remotely calling '%s.%s' with arguments %s.", self._endpoint.FQN(), attribute._rpc_name, args)
-                            return self._endpoint.session._call_remote(self._endpoint.target_jid, "%s.%s" % (self._endpoint.FQN(), attribute._rpc_name), self._callback, *args, **kwargs)
+                            return self._endpoint.session._call_remote(
+                                self._endpoint.target_jid,
+                                f"{self._endpoint.FQN()}.{attribute._rpc_name}",
+                                self._callback,
+                                *args,
+                                **kwargs,
+                            )
                         return _remote_call
                 except:
                     pass   # If the attribute doesn't exist, don't care!
@@ -441,10 +446,7 @@ class JabberRPCEntry(object):
 
     def call_method(self, args):
         return_value = self._call(*args)
-        if return_value is None:
-            return return_value
-        else:
-            return self._return(return_value)
+        return return_value if return_value is None else self._return(return_value)
 
     def get_endpoint_FQN(self):
         return self._endpoint_FQN
@@ -483,7 +485,6 @@ class RemoteSession(object):
         log.debug("RPC Session as %s started.", self._client.boundjid.full)
         self._client.send_presence()
         self._event.set()
-        pass
 
     def _register_call(self, endpoint, method, name=None):
         '''
@@ -491,11 +492,11 @@ class RemoteSession(object):
         '''
         if name is None:
             name = method.__name__
-        key = "%s.%s" % (endpoint, name)
+        key = f"{endpoint}.{name}"
         log.debug("Registering call handler for %s (%s).", key, method)
         with self._lock:
             if key in self._entries:
-                raise KeyError("A handler for %s has already been regisered!" % endpoint)
+                raise KeyError(f"A handler for {endpoint} has already been regisered!")
             self._entries[key] = JabberRPCEntry(endpoint, method)
         return key
 
@@ -515,15 +516,11 @@ class RemoteSession(object):
                 del self._callback[pid]
             else:
                 raise ValueError("Unknown callback!")
-        pass
 
     def _find_key(self, dict, value):
         """return the key of dictionary dic given the value"""
         search = [k for k, v in dict.items() if v == value]
-        if len(search) == 0:
-            return None
-        else:
-            return search[0]
+        return search[0] if search else None
 
     def _unregister_call(self, key):
         #removes the registered call
@@ -616,15 +613,16 @@ class RemoteSession(object):
             if ACL.check(rules, iq['from'], pmethod):
                 return_value = entry.call_method(args)
             else:
-                raise AuthorizationException("Unauthorized access to %s from %s!" % (pmethod, iq['from']))
+                raise AuthorizationException(
+                    f"Unauthorized access to {pmethod} from {iq['from']}!"
+                )
+
             if return_value is None:
                 return_value = ()
             response = self._client.plugin['xep_0009'].make_iq_method_response(iq['id'], iq['from'], py2xml(*return_value))
             response.send()
         except InvocationException as ie:
-            fault = dict()
-            fault['code'] = 500
-            fault['string'] = ie.get_message()
+            fault = {'code': 500, 'string': ie.get_message()}
             self._client.plugin['xep_0009']._send_fault(iq, fault2xml(fault))
         except AuthorizationException as ae:
             log.error(ae.get_message())
@@ -652,7 +650,6 @@ class RemoteSession(object):
             callback.set_value(args[0])
         else:
             callback.set_value(None)
-        pass
 
     def _on_jabber_rpc_method_response2(self, iq):
         iq.enable('rpc_query')
@@ -668,7 +665,6 @@ class RemoteSession(object):
                 callback.set_value(args[0])
             else:
                 callback.set_value(None)
-            pass
 
     def _on_jabber_rpc_method_fault(self, iq):
         iq.enable('rpc_query')
@@ -693,12 +689,19 @@ class RemoteSession(object):
             callback = self._callbacks[pid]
             del self._callbacks[pid]
         e = {
-            'item-not-found': RemoteException("No remote handler available for %s at %s!" % (pmethod, iq['from'])),
-            'forbidden': AuthorizationException("Forbidden to invoke remote handler for %s at %s!" % (pmethod, iq['from'])),
-            'undefined-condition': RemoteException("An unexpected problem occurred trying to invoke %s at %s!" % (pmethod, iq['from'])),
+            'item-not-found': RemoteException(
+                f"No remote handler available for {pmethod} at {iq['from']}!"
+            ),
+            'forbidden': AuthorizationException(
+                f"Forbidden to invoke remote handler for {pmethod} at {iq['from']}!"
+            ),
+            'undefined-condition': RemoteException(
+                f"An unexpected problem occurred trying to invoke {pmethod} at {iq['from']}!"
+            ),
         }[condition]
+
         if e is None:
-            RemoteException("An unexpected exception occurred at %s!" % iq['from'])
+            RemoteException(f"An unexpected exception occurred at {iq['from']}!")
         callback.cancel_with_error(e)
 
 

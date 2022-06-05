@@ -84,7 +84,7 @@ class XEP_0065(BasePlugin):
         # Request that the proxy activate the session with the target.
         await self.activate(proxy, sid, to, timeout=timeout)
         sock = self.get_socket(sid)
-        self.xmpp.event('stream:%s:%s' % (sid, to), sock)
+        self.xmpp.event(f'stream:{sid}:{to}', sock)
         return sock
 
     def request_stream(self, to, sid=None, ifrom=None, timeout=None, callback=None):
@@ -107,19 +107,16 @@ class XEP_0065(BasePlugin):
     async def discover_proxies(self, jid=None, ifrom=None, timeout=None):
         """Auto-discover the JIDs of SOCKS5 proxies on an XMPP server."""
         if jid is None:
-            if self.xmpp.is_component:
-                jid = self.xmpp.server
-            else:
-                jid = self.xmpp.boundjid.server
-
+            jid = self.xmpp.server if self.xmpp.is_component else self.xmpp.boundjid.server
         discovered = set()
 
         disco_items = await self.xmpp['xep_0030'].get_items(jid, timeout=timeout)
         disco_items = {item[0] for item in disco_items['disco_items']['items']}
 
-        disco_info_futures = {}
-        for item in disco_items:
-            disco_info_futures[item] = self.xmpp['xep_0030'].get_info(item, timeout=timeout)
+        disco_info_futures = {
+            item: self.xmpp['xep_0030'].get_info(item, timeout=timeout)
+            for item in disco_items
+        }
 
         for item in disco_items:
             try:
@@ -210,7 +207,7 @@ class XEP_0065(BasePlugin):
             iq['socks']['streamhost_used']['jid'] = used_streamhost
             iq.send()
             self.xmpp.event('socks5_stream', conn)
-            self.xmpp.event('stream:%s:%s' % (sid, requester), conn)
+            self.xmpp.event(f'stream:{sid}:{requester}', conn)
 
         asyncio.ensure_future(gather(proxy_futures, iq, streamhosts))
 
@@ -223,8 +220,7 @@ class XEP_0065(BasePlugin):
 
     def deactivate(self, sid):
         """Closes the proxy socket associated with this SID."""
-        sock = self._sessions.get(sid)
-        if sock:
+        if sock := self._sessions.get(sid):
             try:
                 # sock.close() will also delete sid from self._sessions (see _connect_proxy)
                 sock.close()

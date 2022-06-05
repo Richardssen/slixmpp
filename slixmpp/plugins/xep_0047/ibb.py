@@ -92,9 +92,7 @@ class XEP_0047(BasePlugin):
         return self.api['authorized'](receiver, sid, sender, iq)
 
     def _authorized(self, jid, sid, ifrom, iq):
-        if self.auto_accept:
-            return True
-        return False
+        return bool(self.auto_accept)
 
     def _authorized_sid(self, jid, sid, ifrom, iq):
         if (jid, sid, ifrom) in self._preauthed_sids:
@@ -135,7 +133,7 @@ class XEP_0047(BasePlugin):
             if callback is not None:
                 callback(stream)
             self.xmpp.event('ibb_stream_start', stream)
-            self.xmpp.event('stream:%s:%s' % (stream.sid, stream.peer_jid), stream)
+            self.xmpp.event(f'stream:{stream.sid}:{stream.peer_jid}', stream)
 
         iq.send(timeout=timeout, callback=_handle_opened_stream)
 
@@ -163,7 +161,7 @@ class XEP_0047(BasePlugin):
         iq.reply().send()
 
         self.xmpp.event('ibb_stream_start', stream)
-        self.xmpp.event('stream:%s:%s' % (sid, stream.peer_jid), stream)
+        self.xmpp.event(f'stream:{sid}:{stream.peer_jid}', stream)
 
     def _handle_data(self, stanza):
         sid = stanza['ibb_data']['sid']

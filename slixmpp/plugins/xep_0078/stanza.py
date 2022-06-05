@@ -19,11 +19,11 @@ class IqAuth(ElementBase):
     plugin_attrib_map = {}
 
     def get_fields(self):
-        fields = set()
-        for field in self.sub_interfaces:
-            if self.xml.find('{%s}%s' % (self.namespace, field)) is not None:
-                fields.add(field)
-        return fields
+        return {
+            field
+            for field in self.sub_interfaces
+            if self.xml.find('{%s}%s' % (self.namespace, field)) is not None
+        }
 
     def set_resource(self, value):
         self._set_sub_text('resource', value, keep=True)

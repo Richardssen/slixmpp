@@ -33,7 +33,7 @@ class Google(BasePlugin):
 
     def __getitem__(self, attr):
         if attr in ('settings', 'nosave', 'auth'):
-            return self.xmpp['google_%s' % attr]
+            return self.xmpp[f'google_{attr}']
         elif attr == 'gmail':
             return self.xmpp['gmail']
         else:

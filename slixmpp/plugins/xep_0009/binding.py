@@ -16,21 +16,18 @@ log = logging.getLogger(__name__)
 _namespace = 'jabber:iq:rpc'
 
 def fault2xml(fault):
-    value = dict()
-    value['faultCode'] = fault['code']
-    value['faultString'] = fault['string']
+    value = {'faultCode': fault['code'], 'faultString': fault['string']}
     fault = ET.Element("fault", {'xmlns': _namespace})
     fault.append(_py2xml((value)))
     return fault
 
 def xml2fault(params):
-    vals = []
-    for value in params.xml.findall('{%s}value' % _namespace):
-        vals.append(_xml2py(value))
-    fault = dict()
-    fault['code'] = vals[0]['faultCode']
-    fault['string'] = vals[0]['faultString']
-    return fault
+    vals = [
+        _xml2py(value)
+        for value in params.xml.findall('{%s}value' % _namespace)
+    ]
+
+    return {'code': vals[0]['faultCode'], 'string': vals[0]['faultString']}
 
 def py2xml(*args):
     params = ET.Element("{%s}params" % _namespace)
@@ -91,10 +88,10 @@ def _py2xml(*args):
 
 def xml2py(params):
     namespace = 'jabber:iq:rpc'
-    vals = []
-    for param in params.findall('{%s}param' % namespace):
-        vals.append(_xml2py(param.find('{%s}value' % namespace)))
-    return vals
+    return [
+        _xml2py(param.find('{%s}value' % namespace))
+        for param in params.findall('{%s}param' % namespace)
+    ]
 
 def _xml2py(value):
     namespace = 'jabber:iq:rpc'
@@ -119,15 +116,23 @@ def _xml2py(value):
     if find_value('{%s}dateTime.iso8601' % namespace) is not None:
         return rpctime(find_value('{%s}dateTime.iso8601' % namespace).text)
     if find_value('{%s}struct' % namespace) is not None:
-        struct = {}
-        for member in find_value('{%s}struct' % namespace).findall('{%s}member' % namespace):
-            struct[member.find('{%s}name' % namespace).text] = _xml2py(member.find('{%s}value' % namespace))
-        return struct
+        return {
+            member.find('{%s}name' % namespace).text: _xml2py(
+                member.find('{%s}value' % namespace)
+            )
+            for member in find_value('{%s}struct' % namespace).findall(
+                '{%s}member' % namespace
+            )
+        }
+
     if find_value('{%s}array' % namespace) is not None:
-        array = []
-        for val in find_value('{%s}array' % namespace).find('{%s}data' % namespace).findall('{%s}value' % namespace):
-            array.append(_xml2py(val))
-        return array
+        return [
+            _xml2py(val)
+            for val in find_value('{%s}array' % namespace)
+            .find('{%s}data' % namespace)
+            .findall('{%s}value' % namespace)
+        ]
+
     raise ValueError()
 
 

@@ -49,7 +49,7 @@ class XEP_0300(BasePlugin):
         namespace = 'urn:xmpp:hash-function-text-names:%s'
         self.enabled_hashes = []
         for algo in self._hashlib_function:
-            if getattr(self, 'enable_' + algo, False):
+            if getattr(self, f'enable_{algo}', False):
                 # XXX: this is a hack for Python 3.5 or below, which
                 # don’t support sha3 or blake2b…
                 try:

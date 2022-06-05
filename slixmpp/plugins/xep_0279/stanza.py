@@ -21,10 +21,7 @@ class IPCheck(ElementBase):
         return self.xml.text
 
     def set_ip_check(self, value):
-        if value:
-            self.xml.text = value
-        else:
-            self.xml.text = ''
+        self.xml.text = value or ''
 
     def del_ip_check(self):
         self.xml.text = ''

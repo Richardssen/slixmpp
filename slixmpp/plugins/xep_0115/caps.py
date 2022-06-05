@@ -48,7 +48,7 @@ class XEP_0115(BasePlugin):
                        'md5': hashlib.md5}
 
         if self.caps_node is None:
-            self.caps_node = 'http://slixmpp.com/ver/%s' % __version__
+            self.caps_node = f'http://slixmpp.com/ver/{__version__}'
 
         if self.cache is None:
             self.cache = MemoryCache()
@@ -114,17 +114,15 @@ class XEP_0115(BasePlugin):
         if stanza['type'] not in ('available', 'chat', 'away', 'dnd', 'xa'):
             return stanza
 
-        ver = self.get_verstring(stanza['from'])
-        if ver:
+        if ver := self.get_verstring(stanza['from']):
             stanza['caps']['node'] = self.caps_node
             stanza['caps']['hash'] = self.hash
             stanza['caps']['ver'] = ver
         return stanza
 
     def _handle_caps(self, presence):
-        if not self.xmpp.is_component:
-            if presence['from'] == self.xmpp.boundjid:
-                return
+        if not self.xmpp.is_component and presence['from'] == self.xmpp.boundjid:
+            return
         self.xmpp.event('entity_caps', presence)
 
     def _handle_caps_feature(self, features):
@@ -167,7 +165,7 @@ class XEP_0115(BasePlugin):
 
         log.debug("New caps verification string: %s", ver)
         try:
-            node = '%s#%s' % (pres['caps']['node'], ver)
+            node = f"{pres['caps']['node']}#{ver}"
             caps = await self.xmpp['xep_0030'].get_info(pres['from'], node,
                                                              coroutine=True)
 
@@ -228,8 +226,7 @@ class XEP_0115(BasePlugin):
 
         verstring = self.generate_verstring(caps, hash)
         if verstring != check_verstring:
-            log.debug("Verification strings do not match: %s, %s" % (
-                verstring, check_verstring))
+            log.debug(f"Verification strings do not match: {verstring}, {check_verstring}")
             return False
 
         self.cache_caps(verstring, caps)
@@ -291,9 +288,9 @@ class XEP_0115(BasePlugin):
                 info = info['disco_info']
             ver = self.generate_verstring(info, self.hash)
             self.xmpp['xep_0030'].set_info(
-                    jid=jid,
-                    node='%s#%s' % (self.caps_node, ver),
-                    info=info)
+                jid=jid, node=f'{self.caps_node}#{ver}', info=info
+            )
+
             self.cache_caps(ver, info)
             self.assign_verstring(jid, ver)
 

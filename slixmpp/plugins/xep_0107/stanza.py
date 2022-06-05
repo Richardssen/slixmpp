@@ -50,6 +50,5 @@ class UserMood(ElementBase):
         return ''
 
     def del_value(self):
-        curr_value = self.get_value()
-        if curr_value:
+        if curr_value := self.get_value():
             self._set_sub_text(curr_value, '', keep=False)

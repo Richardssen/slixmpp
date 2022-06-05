@@ -151,26 +151,20 @@ def verify(expected, raw_cert):
         raise CertificateError(
                 'Certificate has expired.')
 
-    if '.' in expected:
-        expected_wild = expected[expected.index('.'):]
-    else:
-        expected_wild = expected
-    expected_srv = '_xmpp-client.%s' % expected
+    expected_wild = expected[expected.index('.'):] if '.' in expected else expected
+    expected_srv = f'_xmpp-client.{expected}'
 
     for name in cert_names['XMPPAddr']:
         if name == expected:
             return True
     for name in cert_names['SRV']:
-        if name == expected_srv or name == expected:
+        if name in [expected_srv, expected]:
             return True
     for name in cert_names['DNS']:
         if name == expected:
             return True
         if name.startswith('*'):
-            if '.' in name:
-                name_wild = name[name.index('.'):]
-            else:
-                name_wild = name
+            name_wild = name[name.index('.'):] if '.' in name else name
             if expected_wild == name_wild:
                 return True
     for name in cert_names['URI']:
@@ -181,4 +175,5 @@ def verify(expected, raw_cert):
             return True
 
     raise CertificateError(
-            'Could not match certificate against hostname: %s' % expected)
+        f'Could not match certificate against hostname: {expected}'
+    )

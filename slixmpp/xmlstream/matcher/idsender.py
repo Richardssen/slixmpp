@@ -31,13 +31,14 @@ class MatchIDSender(MatcherBase):
         selfjid = self._criteria['self']
         peerjid = self._criteria['peer']
 
-        allowed = {}
-        allowed[''] = True
-        allowed[selfjid.bare] = True
-        allowed[selfjid.host] = True
-        allowed[peerjid.full] = True
-        allowed[peerjid.bare] = True
-        allowed[peerjid.host] = True
+        allowed = {
+            '': True,
+            selfjid.bare: True,
+            selfjid.host: True,
+            peerjid.full: True,
+            peerjid.bare: True,
+            peerjid.host: True,
+        }
 
         _from = xml['from']
 

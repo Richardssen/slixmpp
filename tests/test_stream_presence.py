@@ -200,7 +200,7 @@ class TestStreamPresence(SlixTest):
 
         for ptype in ptypes:
             handler = lambda p: events.append(p['type'])
-            self.xmpp.add_event_handler('presence_%s' % ptype, handler)
+            self.xmpp.add_event_handler(f'presence_{ptype}', handler)
 
         self.recv("""
           <presence />
@@ -233,8 +233,7 @@ class TestStreamPresence(SlixTest):
           <presence type="unsubscribed" />
         """)
 
-        self.assertEqual(events, ptypes,
-            "Not all events raised: %s" % events)
+        self.assertEqual(events, ptypes, f"Not all events raised: {events}")
 
     def test_changed_status(self):
         """Test that the changed_status event is handled properly."""

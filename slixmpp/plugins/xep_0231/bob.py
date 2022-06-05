@@ -70,7 +70,7 @@ class XEP_0231(BasePlugin):
 
     def set_bob(self, data, mtype, cid=None, max_age=None):
         if cid is None:
-            cid = 'sha1+%s@bob.xmpp.org' % hashlib.sha1(data).hexdigest()
+            cid = f'sha1+{hashlib.sha1(data).hexdigest()}@bob.xmpp.org'
 
         bob = BitsOfBinary()
         bob['data'] = data

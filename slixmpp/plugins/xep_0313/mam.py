@@ -62,8 +62,10 @@ class XEP_0313(BasePlugin):
         def pre_cb(query):
             query['mam']['queryid'] = query['id']
             collector = Collector(
-                'MAM_Results_%s' % query_id,
-                StanzaPath('message/mam_result@queryid=%s' % query['id']))
+                f'MAM_Results_{query_id}',
+                StanzaPath(f"message/mam_result@queryid={query['id']}"),
+            )
+
             self.xmpp.register_handler(collector)
             cb_data['collector'] = collector
 

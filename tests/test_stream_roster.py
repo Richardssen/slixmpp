@@ -52,8 +52,10 @@ class TestStreamRoster(SlixTest):
                           pending_out=True,
                           groups=['Friends', 'Examples'])
 
-        self.assertTrue(len(roster_updates) == 1,
-                "Wrong number of roster_update events fired: %s (should be 1)" % len(roster_updates))
+        self.assertTrue(
+            len(roster_updates) == 1,
+            f"Wrong number of roster_update events fired: {len(roster_updates)} (should be 1)",
+        )
 
     def testRosterSet(self):
         """Test handling pushed roster updates."""
@@ -209,8 +211,10 @@ class TestStreamRoster(SlixTest):
                           groups=['Unicode'])
 
         jids = list(self.xmpp.client_roster.keys())
-        self.assertTrue(jids == ['andré@foo'],
-                 "Too many roster entries found: %s" % jids)
+        self.assertTrue(
+            jids == ['andré@foo'], f"Too many roster entries found: {jids}"
+        )
+
 
         self.recv("""
           <presence to="tester@localhost" from="andré@foo/bar">
@@ -223,8 +227,7 @@ class TestStreamRoster(SlixTest):
         expected = {'bar': {'status':'Testing',
                             'show':'away',
                             'priority':0}}
-        self.assertTrue(result == expected,
-                "Unexpected roster values: %s" % result)
+        self.assertTrue(result == expected, f"Unexpected roster values: {result}")
 
     def testSendLastPresence(self):
         """Test that sending the last presence works."""

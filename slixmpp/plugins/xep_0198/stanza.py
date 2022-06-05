@@ -54,10 +54,7 @@ class Resume(StanzaBase):
         self.xml.tag = self.tag_name()
 
     def get_h(self):
-        h = self._get_attr('h', None)
-        if h:
-            return int(h)
-        return None
+        return int(h) if (h := self._get_attr('h', None)) else None
 
     def set_h(self, val):
         self._set_attr('h', str(val))
@@ -73,10 +70,7 @@ class Resumed(StanzaBase):
         self.xml.tag = self.tag_name()
 
     def get_h(self):
-        h = self._get_attr('h', None)
-        if h:
-            return int(h)
-        return None
+        return int(h) if (h := self._get_attr('h', None)) else None
 
     def set_h(self, val):
         self._set_attr('h', str(val))
@@ -141,10 +135,7 @@ class Ack(StanzaBase):
         self.xml.tag = self.tag_name()
 
     def get_h(self):
-        h = self._get_attr('h', None)
-        if h:
-            return int(h)
-        return None
+        return int(h) if (h := self._get_attr('h', None)) else None
 
     def set_h(self, val):
         self._set_attr('h', str(val))

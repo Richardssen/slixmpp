@@ -80,10 +80,8 @@ class XEP_0184(BasePlugin):
         Arguments:
             msg -- The incoming message requesting a receipt.
         """
-        if self.auto_ack:
-            if msg['type'] in self.ack_types:
-                if not msg['receipt']:
-                    self.ack(msg)
+        if self.auto_ack and msg['type'] in self.ack_types and not msg['receipt']:
+            self.ack(msg)
 
     def _filter_add_receipt_request(self, stanza):
         """
@@ -110,7 +108,7 @@ class XEP_0184(BasePlugin):
         if stanza['request_receipt']:
             return stanza
 
-        if not stanza['type'] in self.ack_types:
+        if stanza['type'] not in self.ack_types:
             return stanza
 
         if stanza['receipt']:
@@ -119,11 +117,10 @@ class XEP_0184(BasePlugin):
         if not stanza['body']:
             return stanza
 
-        if stanza['to'].resource:
-            if not self.xmpp['xep_0030'].supports(stanza['to'],
-                    feature='urn:xmpp:receipts',
-                    cached=True):
-                return stanza
+        if stanza['to'].resource and not self.xmpp['xep_0030'].supports(
+            stanza['to'], feature='urn:xmpp:receipts', cached=True
+        ):
+            return stanza
 
         stanza['request_receipt'] = True
         return stanza

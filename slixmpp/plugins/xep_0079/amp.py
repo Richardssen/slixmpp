@@ -60,7 +60,7 @@ class XEP_0079(BasePlugin):
         if msg['type'] == 'error':
             self.xmpp.event('amp_error', msg)
         elif msg['amp']['status'] in ('alert', 'notify'):
-            self.xmpp.event('amp_%s' % msg['amp']['status'], msg)
+            self.xmpp.event(f"amp_{msg['amp']['status']}", msg)
 
     def _handle_amp_feature(self, features):
         log.debug('Advanced Message Processing is available.')

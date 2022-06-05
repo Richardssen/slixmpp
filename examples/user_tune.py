@@ -78,7 +78,7 @@ class TuneBot(ClientXMPP):
 
     def user_tune_publish(self, msg):
         tune = msg['pubsub_event']['items']['item']['tune']
-        print("%s is listening to: %s" % (msg['from'], tune['title']))
+        print(f"{msg['from']} is listening to: {tune['title']}")
 
 
 if __name__ == '__main__':

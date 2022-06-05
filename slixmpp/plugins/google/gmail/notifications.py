@@ -69,8 +69,7 @@ class Gmail(BasePlugin):
 
     def _update_last_results(self, iq, callback=None):
         self._last_result_time = iq['gmail_messages']['result_time']
-        threads = iq['gmail_messages']['threads']
-        if threads:
+        if threads := iq['gmail_messages']['threads']:
             self._last_result_tid = threads[0]['tid']
         if callback:
             callback(iq)

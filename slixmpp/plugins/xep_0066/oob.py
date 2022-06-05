@@ -83,15 +83,14 @@ class XEP_0066(BasePlugin):
                        is None.
         """
         if jid is None:
-            if handler is not None:
-                self.url_handlers['global'] = handler
-            else:
-                self.url_handlers['global'] = self._default_handler
+            self.url_handlers['global'] = (
+                handler if handler is not None else self._default_handler
+            )
+
+        elif handler is not None:
+            self.url_handlers['jid'][jid] = handler
         else:
-            if handler is not None:
-                self.url_handlers['jid'][jid] = handler
-            else:
-                del self.url_handlers['jid'][jid]
+            del self.url_handlers['jid'][jid]
 
     def send_oob(self, to, url, desc=None, ifrom=None, **iqargs):
         """
@@ -127,11 +126,10 @@ class XEP_0066(BasePlugin):
         """
         if iq['to'] in self.url_handlers['jid']:
             return self.url_handlers['jid'][iq['to']](iq)
+        if self.url_handlers['global']:
+            self.url_handlers['global'](iq)
         else:
-            if self.url_handlers['global']:
-                self.url_handlers['global'](iq)
-            else:
-                raise XMPPError('service-unavailable')
+            raise XMPPError('service-unavailable')
 
     def _default_handler(self, iq):
         """
@@ -152,7 +150,9 @@ class XEP_0066(BasePlugin):
         Arguments:
             iq -- An Iq stanza containing an OOB transfer request.
         """
-        log.debug('Received out-of-band data request for %s from %s:' % (
-            iq['oob_transfer']['url'], iq['from']))
+        log.debug(
+            f"Received out-of-band data request for {iq['oob_transfer']['url']} from {iq['from']}:"
+        )
+
         self._run_url_handler(iq)
         iq.reply().send()

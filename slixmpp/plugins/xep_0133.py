@@ -39,10 +39,11 @@ def create_command(name):
         if jid is None:
             jid = self.xmpp.boundjid.server
         self.xmpp['xep_0050'].start_command(
-                jid=jid,
-                node='http://jabber.org/protocol/admin#%s' % name,
-                session=session,
-                ifrom=ifrom)
+            jid=jid,
+            node=f'http://jabber.org/protocol/admin#{name}',
+            session=session,
+            ifrom=ifrom,
+        )
     return admin_command
 
 

@@ -34,8 +34,7 @@ class MAM(ElementBase):
 
     def get_start(self):
         fields = self.__get_fields()
-        field = fields.get('start')
-        if field:
+        if field := fields.get('start'):
             return xep_0082.parse(field['value'])
 
     def set_start(self, value):
@@ -43,16 +42,13 @@ class MAM(ElementBase):
             value = xep_0082.format_datetime(value)
         fields = self.__get_fields()
         field = fields.get('start')
-        if field:
-            field['value'] = value
-        else:
+        if not field:
             field = self._form.add_field(var='start')
-            field['value'] = value
+        field['value'] = value
 
     def get_end(self):
         fields = self.__get_fields()
-        field = fields.get('end')
-        if field:
+        if field := fields.get('end'):
             return xep_0082.parse(field['value'])
 
     def set_end(self, value):
@@ -60,22 +56,18 @@ class MAM(ElementBase):
             value = xep_0082.format_datetime(value)
         fields = self.__get_fields()
         field = fields.get('end')
-        if field:
-            field['value'] = value
-        else:
+        if not field:
             field = self._form.add_field(var='end')
-            field['value'] = value
+        field['value'] = value
 
     def get_with(self):
         fields = self.__get_fields()
-        field = fields.get('with')
-        if field:
+        if field := fields.get('with'):
             return JID(field['value'])
 
     def set_with(self, value):
         fields = self.__get_fields()
-        field = fields.get('with')
-        if field:
+        if field := fields.get('with'):
             field['with'] = str(value)
         else:
             field = self._form.add_field(var='with')
@@ -102,15 +94,10 @@ class Preferences(ElementBase):
     sub_interfaces = {'always', 'never'}
 
     def get_always(self):
-        results = set()
-
         jids = self.xml.findall('{%s}always/{%s}jid' % (
             self.namespace, self.namespace))
 
-        for jid in jids:
-            results.add(JID(jid.text))
-
-        return results
+        return {JID(jid.text) for jid in jids}
 
     def set_always(self, value):
         self._set_sub_text('always', '', keep=True)
@@ -126,15 +113,10 @@ class Preferences(ElementBase):
             always.append(jid_xml)
 
     def get_never(self):
-        results = set()
-
         jids = self.xml.findall('{%s}never/{%s}jid' % (
             self.namespace, self.namespace))
 
-        for jid in jids:
-            results.add(JID(jid.text))
-
-        return results
+        return {JID(jid.text) for jid in jids}
 
     def set_never(self, value):
         self._set_sub_text('never', '', keep=True)

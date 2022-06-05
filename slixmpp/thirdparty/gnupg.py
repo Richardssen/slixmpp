@@ -71,10 +71,7 @@ if not logger.handlers:
 def _copy_data(instream, outstream):
     # Copy one stream to another
     sent = 0
-    if hasattr(sys.stdin, 'encoding'):
-        enc = sys.stdin.encoding
-    else:
-        enc = 'ascii'
+    enc = sys.stdin.encoding if hasattr(sys.stdin, 'encoding') else 'ascii'
     while True:
         data = instream.read(1024)
         if len(data) == 0:
@@ -85,11 +82,6 @@ def _copy_data(instream, outstream):
             outstream.write(data)
         except UnicodeError:
             outstream.write(data.encode(enc))
-        except:
-            # Can sometimes get 'broken pipe' errors even when the data has all
-            # been sent
-            logger.exception('Error sending data')
-            break
     try:
         outstream.close()
     except IOError:
@@ -110,16 +102,12 @@ def _write_passphrase(stream, passphrase, encoding):
     logger.debug("Wrote passphrase: %r", passphrase)
 
 def _is_sequence(instance):
-    return isinstance(instance,list) or isinstance(instance,tuple)
+    return isinstance(instance, (list, tuple))
 
 def _make_binary_stream(s, encoding):
     try:
-        if _py3k:
-            if isinstance(s, str):
-                s = s.encode(encoding)
-        else:
-            if type(s) is not str:
-                s = s.encode(encoding)
+        if _py3k and isinstance(s, str) or not _py3k and type(s) is not str:
+            s = s.encode(encoding)
         from io import BytesIO
         rv = BytesIO(s)
     except ImportError:
@@ -191,7 +179,7 @@ class Verify(object):
             # signed with expired or revoked key
             self.valid = False
             self.key_id = value.split()[0]
-            self.status = (('%s %s') % (key[:3], key[3:])).lower()
+            self.status = f'{key[:3]} {key[3:]}'.lower()
         else:
             raise ValueError("Unknown status message: %r" % key)
 
@@ -235,17 +223,18 @@ class ImportResult(object):
 
     def handle_status(self, key, value):
         if key == "IMPORTED":
-            # this duplicates info we already see in import_ok & import_problem
-            pass
-        elif key == "NODATA":
+            return
+        if key == "NODATA":
             self.results.append({'fingerprint': None,
                 'problem': '0', 'text': 'No valid data found'})
         elif key == "IMPORT_OK":
             reason, fingerprint = value.split()
-            reasons = []
-            for code, text in list(self.ok_reason.items()):
-                if int(reason) | int(code) == int(reason):
-                    reasons.append(text)
+            reasons = [
+                text
+                for code, text in list(self.ok_reason.items())
+                if int(reason) | int(code) == int(reason)
+            ]
+
             reasontext = '\n'.join(reasons) + "\n"
             self.results.append({'fingerprint': fingerprint,
                 'ok': reason, 'text': reasontext})
@@ -272,8 +261,7 @@ class ImportResult(object):
             raise ValueError("Unknown status message: %r" % key)
 
     def summary(self):
-        l = []
-        l.append('%d imported'%self.imported)
+        l = ['%d imported' % self.imported]
         if self.not_imported:
             l.append('%d not imported'%self.not_imported)
         return ', '.join(l)
@@ -337,8 +325,7 @@ class Crypt(Verify):
         self.status = ''
 
     def __nonzero__(self):
-        if self.ok: return True
-        return False
+        return bool(self.ok)
 
     __bool__ = __nonzero__
 
@@ -387,8 +374,7 @@ class GenKey(object):
         self.fingerprint = None
 
     def __nonzero__(self):
-        if self.fingerprint: return True
-        return False
+        return bool(self.fingerprint)
 
     __bool__ = __nonzero__
 
@@ -493,8 +479,7 @@ class GPG(object):
         result = self.result_map['verify'](self) # any result will do for this
         self._collect_output(p, result, stdin=p.stdin)
         if p.returncode != 0:
-            raise ValueError("Error invoking gpg: %s: %s" % (p.returncode,
-                                                             result.stderr))
+            raise ValueError(f"Error invoking gpg: {p.returncode}: {result.stderr}")
 
     def _open_subprocess(self, args, passphrase=False):
         # Internal method: open a pipe to a GPG subprocess and return
@@ -531,15 +516,12 @@ class GPG(object):
             if self.verbose:
                 print(line)
             logger.debug("%s", line)
-            if line[0:9] == '[GNUPG:] ':
+            if line[:9] == '[GNUPG:] ':
                 # Chop off the prefix
                 line = line[9:]
                 L = line.split(None, 1)
                 keyword = L[0]
-                if len(L) > 1:
-                    value = L[1]
-                else:
-                    value = ""
+                value = L[1] if len(L) > 1 else ""
                 result.handle_status(keyword, value)
         result.stderr = ''.join(lines)
 
@@ -552,11 +534,7 @@ class GPG(object):
                 break
             logger.debug("chunk: %r" % data[:256])
             chunks.append(data)
-        if _py3k:
-            # Join using b'' or '', as appropriate
-            result.data = type(data)().join(chunks)
-        else:
-            result.data = ''.join(chunks)
+        result.data = type(data)().join(chunks) if _py3k else ''.join(chunks)
 
     def _collect_output(self, process, result, writer=None, stdin=None):
         """
@@ -595,10 +573,7 @@ class GPG(object):
         # Handle a basic data call - pass data to GPG, handle the output
         # including status information. Garbage In, Garbage Out :)
         p = self._open_subprocess(args, passphrase is not None)
-        if not binary:
-            stdin = codecs.getwriter(self.encoding)(p.stdin)
-        else:
-            stdin = p.stdin
+        stdin = p.stdin if binary else codecs.getwriter(self.encoding)(p.stdin)
         if passphrase:
             _write_passphrase(stdin, passphrase, self.encoding)
         writer = _threaded_copy_data(file, stdin)
@@ -619,10 +594,7 @@ class GPG(object):
                   detach=False, binary=False):
         """sign file"""
         logger.debug("sign_file: %s", file)
-        if binary:
-            args = ['-s']
-        else:
-            args = ['-sa']
+        args = ['-s'] if binary else ['-sa']
         # You can't specify detach-sign and clearsign together: gpg ignores
         # the detach-sign in that case.
         if detach:
@@ -683,8 +655,7 @@ class GPG(object):
             logger.debug('Wrote to temp file: %r', s)
             os.write(fd, s)
             os.close(fd)
-            args.append(fn)
-            args.append('"%s"' % data_filename)
+            args.extend((fn, '"%s"' % data_filename))
             try:
                 p = self._open_subprocess(args)
                 self._collect_output(p, result, stdin=p.stdin)
@@ -771,9 +742,7 @@ class GPG(object):
         return result
 
     def delete_keys(self, fingerprints, secret=False):
-        which='key'
-        if secret:
-            which='secret-key'
+        which = 'secret-key' if secret else 'key'
         if _is_sequence(fingerprints):
             fingerprints = ' '.join(fingerprints)
         args = ['--batch --delete-%s "%s"' % (which, fingerprints)]
@@ -784,12 +753,10 @@ class GPG(object):
 
     def export_keys(self, keyids, secret=False):
         "export the indicated keys. 'keyid' is anything gpg accepts"
-        which=''
-        if secret:
-            which='-secret-key'
+        which = '-secret-key' if secret else ''
         if _is_sequence(keyids):
             keyids = ' '.join(['"%s"' % k for k in keyids])
-        args = ["--armor --export%s %s" % (which, keyids)]
+        args = [f"--armor --export{which} {keyids}"]
         p = self._open_subprocess(args)
         # gpg --export produces no status-fd output; stdout will be
         # empty in case of failure
@@ -816,10 +783,8 @@ class GPG(object):
 
         """
 
-        which='keys'
-        if secret:
-            which='secret-keys'
-        args = "--list-%s --fixed-list-mode --fingerprint --with-colons" % (which,)
+        which = 'secret-keys' if secret else 'keys'
+        args = f"--list-{which} --fixed-list-mode --fingerprint --with-colons"
         args = [args]
         p = self._open_subprocess(args)
 
@@ -882,8 +847,7 @@ class GPG(object):
         except KeyError:
             logname = os.environ['USERNAME']
         hostname = socket.gethostname()
-        parms.setdefault('Name-Email', "%s@%s" % (logname.replace(' ', '_'),
-                                                  hostname))
+        parms.setdefault('Name-Email', f"{logname.replace(' ', '_')}@{hostname}")
         out = "Key-Type: %s\n" % parms.pop('Key-Type')
         for key, val in list(parms.items()):
             out += "%s: %s\n" % (key, val)
@@ -926,8 +890,7 @@ class GPG(object):
             args.append('--encrypt')
             if not _is_sequence(recipients):
                 recipients = (recipients,)
-            for recipient in recipients:
-                args.append('--recipient "%s"' % recipient)
+            args.extend('--recipient "%s"' % recipient for recipient in recipients)
         if armor:   # create ascii-armored output - set to False for binary output
             args.append('--armor')
         if output:  # write the output to a file with the specified name

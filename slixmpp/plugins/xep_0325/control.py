@@ -145,7 +145,7 @@ class XEP_0325(BasePlugin):
 
     def _new_session(self):
         """ Return a new session ID. """
-        return str(time.time()) + '-' + self.xmpp.new_id()
+        return f'{str(time.time())}-{self.xmpp.new_id()}'
 
     def plugin_end(self):
         """ Stop the XEP-0325 plugin """
@@ -217,7 +217,10 @@ class XEP_0325(BasePlugin):
         missing_field = None
 
         # Authentication
-        if len(self.test_authenticated_from) > 0 and not iq['from'] == self.test_authenticated_from:
+        if (
+            len(self.test_authenticated_from) > 0
+            and iq['from'] != self.test_authenticated_from
+        ):
             # Invalid authentication
             req_ok = False
             error_msg = "Access denied"
@@ -225,7 +228,7 @@ class XEP_0325(BasePlugin):
         # Nodes
         if len(iq['set']['nodes']) > 0:
             for n in iq['set']['nodes']:
-                if not n['nodeId'] in self.nodes:
+                if n['nodeId'] not in self.nodes:
                     req_ok = False
                     missing_node = n['nodeId']
                     error_msg = "Invalid nodeId " + n['nodeId']
@@ -247,11 +250,14 @@ class XEP_0325(BasePlugin):
 
         if req_ok:
             session = self._new_session()
-            self.sessions[session] = {"from": iq['from'], "to": iq['to'], "seqnr": iq['id']}
-            self.sessions[session]["commTimers"] = {}
-            self.sessions[session]["nodeDone"] = {}
-            # Flag that a reply is exected when we are done
-            self.sessions[session]["reply"] = True
+            self.sessions[session] = {
+                "from": iq['from'],
+                "to": iq['to'],
+                "seqnr": iq['id'],
+                "commTimers": {},
+                "nodeDone": {},
+                "reply": True,
+            }
 
             self.sessions[session]["node_list"] = process_nodes
             self._node_request(session, process_fields)
@@ -287,7 +293,7 @@ class XEP_0325(BasePlugin):
         # Nodes
         if len(msg['set']['nodes']) > 0:
             for n in msg['set']['nodes']:
-                if not n['nodeId'] in self.nodes:
+                if n['nodeId'] not in self.nodes:
                     req_ok = False
                     error_msg = "Invalid nodeId " + n['nodeId']
             process_nodes = [n['nodeId'] for n in msg['set']['nodes']]
@@ -308,10 +314,13 @@ class XEP_0325(BasePlugin):
 
         if req_ok:
             session = self._new_session()
-            self.sessions[session] = {"from": msg['from'], "to": msg['to']}
-            self.sessions[session]["commTimers"] = {}
-            self.sessions[session]["nodeDone"] = {}
-            self.sessions[session]["reply"] = False
+            self.sessions[session] = {
+                "from": msg['from'],
+                "to": msg['to'],
+                "commTimers": {},
+                "nodeDone": {},
+                "reply": False,
+            }
 
             self.sessions[session]["node_list"] = process_nodes
             self._node_request(session, process_fields)
@@ -374,10 +383,10 @@ class XEP_0325(BasePlugin):
         Arguments:
             session         -- The request session id
         """
-        for n in self.sessions[session]["nodeDone"]:
-            if not self.sessions[session]["nodeDone"][n]:
-                return False
-        return True
+        return all(
+            self.sessions[session]["nodeDone"][n]
+            for n in self.sessions[session]["nodeDone"]
+        )
 
     def _device_set_command_callback(self, session, nodeId, result, error_field=None, error_msg=None):
         """
@@ -398,7 +407,7 @@ class XEP_0325(BasePlugin):
                                 Error details when a request failed.
         """
 
-        if not session in self.sessions:
+        if session not in self.sessions:
             # This can happen if a session was deleted, like in a timeout. Just drop the data.
             return
 
@@ -540,7 +549,10 @@ class XEP_0325(BasePlugin):
         fields = [f['name'] for f in iq['setResponse']['datas']]
         error_msg = None
 
-        if not iq['setResponse'].xml.find('error') is None and not iq['setResponse']['error']['text'] == "":
+        if (
+            iq['setResponse'].xml.find('error') is not None
+            and iq['setResponse']['error']['text'] != ""
+        ):
             error_msg = iq['setResponse']['error']['text']
 
         callback = self.sessions[seqnr]["callback"]

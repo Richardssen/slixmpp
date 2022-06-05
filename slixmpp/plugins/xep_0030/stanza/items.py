@@ -62,7 +62,7 @@ class DiscoItems(ElementBase):
             xml -- Use an existing XML object for the stanza's values.
         """
         ElementBase.setup(self, xml)
-        self._items = {item[0:2] for item in self['items']}
+        self._items = {item[:2] for item in self['items']}
 
     def add_item(self, jid, node=None, name=None):
         """
@@ -105,11 +105,11 @@ class DiscoItems(ElementBase):
 
     def get_items(self):
         """Return all items."""
-        items = set()
-        for item in self['substanzas']:
-            if isinstance(item, DiscoItem):
-                items.add((item['jid'], item['node'], item['name']))
-        return items
+        return {
+            (item['jid'], item['node'], item['name'])
+            for item in self['substanzas']
+            if isinstance(item, DiscoItem)
+        }
 
     def set_items(self, items):
         """

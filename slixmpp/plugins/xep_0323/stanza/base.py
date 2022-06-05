@@ -8,6 +8,5 @@
     See the file LICENSE for copying permission.
 """
 
-from slixmpp.xmlstream import ET
 
-pass
+from slixmpp.xmlstream import ET

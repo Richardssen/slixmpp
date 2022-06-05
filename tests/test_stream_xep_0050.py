@@ -35,11 +35,7 @@ class TestAdHocCommands(SlixTest):
             initial = session['payload']
             logging.debug(initial)
             new_payload = TestPayload()
-            if initial:
-                new_payload['bar'] = 'Received: %s' % initial['bar']
-            else:
-                new_payload['bar'] = 'Failed'
-
+            new_payload['bar'] = f"Received: {initial['bar']}" if initial else 'Failed'
             logging.debug(initial)
 
             session['payload'] = new_payload

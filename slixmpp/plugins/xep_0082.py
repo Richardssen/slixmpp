@@ -57,7 +57,7 @@ def format_time(time_obj):
     timestamp = time_obj.isoformat()
     if time_obj.tzinfo == tzutc():
         timestamp = timestamp[:-6]
-        return '%sZ' % timestamp
+        return f'{timestamp}Z'
     return timestamp
 
 
@@ -74,7 +74,7 @@ def format_datetime(time_obj):
     timestamp = time_obj.isoformat('T')
     if time_obj.tzinfo == tzutc():
         timestamp = timestamp[:-6]
-        return '%sZ' % timestamp
+        return f'{timestamp}Z'
     return timestamp
 
 

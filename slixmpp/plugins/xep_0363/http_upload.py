@@ -77,9 +77,12 @@ class XEP_0363(BasePlugin):
 
         candidates = []
         for info in results:
-            for identity in info['disco_info']['identities']:
-                if identity[0] == 'store' and identity[1] == 'file':
-                    candidates.append(info)
+            candidates.extend(
+                info
+                for identity in info['disco_info']['identities']
+                if identity[0] == 'store' and identity[1] == 'file'
+            )
+
         for info in candidates:
             for feature in info['disco_info']['features']:
                 if feature == Request.namespace:
@@ -130,8 +133,8 @@ class XEP_0363(BasePlugin):
 
         if content_type is None:
             content_type = guess_type(filename)[0]
-            if content_type is None:
-                content_type = self.default_content_type
+        if content_type is None:
+            content_type = self.default_content_type
 
         basename = os.path.basename(filename)
         slot_iq = await self.request_slot(self.upload_service, basename, size,
@@ -146,7 +149,7 @@ class XEP_0363(BasePlugin):
         }
 
         # Do the actual upload here.
-        async with ClientSession(headers={'User-Agent': 'slixmpp ' + __version__}) as session:
+        async with ClientSession(headers={'User-Agent': f'slixmpp {__version__}'}) as session:
             response = await session.put(
                     slot['put']['url'],
                     data=input_file,

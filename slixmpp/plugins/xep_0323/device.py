@@ -43,9 +43,7 @@ class Device(object):
         Arguments:
             field      -- The field name
         """
-        if field in self.fields.keys():
-            return True
-        return False
+        return field in self.fields.keys()
 
     def refresh(self, fields):
         """
@@ -117,7 +115,6 @@ class Device(object):
 
         if "momentary" in flags and flags['momentary'] == "true" or \
            "all" in flags and flags['all'] == "true":
-            ts_block = {}
             timestamp = ""
 
             if len(self.momentary_timestamp) > 0:
@@ -125,18 +122,20 @@ class Device(object):
             else:
                 timestamp = self._get_timestamp()
 
-            field_block = []
-            for f in self.momentary_data:
-                if f in fields:
-                    field_block.append({"name": f,
-                                "type": self.fields[f]["type"],
-                                "unit": self.fields[f]["unit"],
-                                "dataType": self.fields[f]["dataType"],
-                                "value": self.momentary_data[f]["value"],
-                                "flags": self.momentary_data[f]["flags"]})
-            ts_block["timestamp"] = timestamp
-            ts_block["fields"] = field_block
+            field_block = [
+                {
+                    "name": f,
+                    "type": self.fields[f]["type"],
+                    "unit": self.fields[f]["unit"],
+                    "dataType": self.fields[f]["dataType"],
+                    "value": self.momentary_data[f]["value"],
+                    "flags": self.momentary_data[f]["flags"],
+                }
+                for f in self.momentary_data
+                if f in fields
+            ]
 
+            ts_block = {"timestamp": timestamp, "fields": field_block}
             callback(session, result="done", nodeId=self.nodeId, timestamp_block=ts_block)
             return
 
@@ -145,26 +144,27 @@ class Device(object):
 
         for ts in sorted(self.timestamp_data.keys()):
             tsdt = datetime.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S")
-            if not from_flag is None:
-                if tsdt < from_flag:
-                    #print (str(tsdt) + " < " + str(from_flag))
-                    continue
-            if not to_flag is None:
-                if tsdt > to_flag:
-                    #print (str(tsdt) + " > " + str(to_flag))
-                    continue
+            if from_flag is not None and tsdt < from_flag:
+                #print (str(tsdt) + " < " + str(from_flag))
+                continue
+            if to_flag is not None and tsdt > to_flag:
+                #print (str(tsdt) + " > " + str(to_flag))
+                continue
 
             ts_block = {}
-            field_block = []
+            field_block = [
+                {
+                    "name": f,
+                    "type": self.fields[f]["type"],
+                    "unit": self.fields[f]["unit"],
+                    "dataType": self.fields[f]["dataType"],
+                    "value": self.timestamp_data[ts][f]["value"],
+                    "flags": self.timestamp_data[ts][f]["flags"],
+                }
+                for f in self.timestamp_data[ts]
+                if f in fields
+            ]
 
-            for f in self.timestamp_data[ts]:
-                if f in fields:
-                    field_block.append({"name": f,
-                                "type": self.fields[f]["type"],
-                                "unit": self.fields[f]["unit"],
-                                "dataType": self.fields[f]["dataType"],
-                                "value": self.timestamp_data[ts][f]["value"],
-                                "flags": self.timestamp_data[ts][f]["flags"]})
 
             ts_block["timestamp"] = ts
             ts_block["fields"] = field_block
@@ -172,7 +172,7 @@ class Device(object):
         callback(session, result="done", nodeId=self.nodeId, timestamp_block=None)
 
     def _datetime_flag_parser(self, flags, flagname):
-        if not flagname in flags:
+        if flagname not in flags:
             return None
 
         dt = None
@@ -223,9 +223,9 @@ class Device(object):
             flags     -- [optional] data classifier flags for the field, e.g. momentary
                          Formatted as a dictionary like { "flag name": "flag value" ... }
         """
-        if not name in self.fields.keys():
+        if name not in self.fields.keys():
             return False
-        if not timestamp in self.timestamp_data:
+        if timestamp not in self.timestamp_data:
             self.timestamp_data[timestamp] = {}
 
         self.timestamp_data[timestamp][name] = {"value": value, "flags": flags}

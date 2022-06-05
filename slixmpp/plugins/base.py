@@ -78,11 +78,11 @@ def load_plugin(name, module=None):
     try:
         if not module:
             try:
-                module = 'slixmpp.plugins.%s' % name
+                module = f'slixmpp.plugins.{name}'
                 __import__(module)
                 mod = sys.modules[module]
             except ImportError:
-                module = 'slixmpp.features.%s' % name
+                module = f'slixmpp.features.{name}'
                 __import__(module)
                 mod = sys.modules[module]
         elif isinstance(module, str):
@@ -119,7 +119,7 @@ class PluginManager(object):
         #: Globally set default plugin configuration. This will
         #: be used for plugins that are auto-enabled through
         #: dependency loading.
-        self.config = config if config else {}
+        self.config = config or {}
 
         self.xmpp = xmpp
 
@@ -166,12 +166,7 @@ class PluginManager(object):
                 plugin._init()
 
         for name in enabled:
-            if hasattr(self._plugins[name], 'old_style'):
-                # Older style plugins require post_init()
-                # to run just before stream processing begins,
-                # so we don't call it here.
-                pass
-            else:
+            if not hasattr(self._plugins[name], 'old_style'):
                 self._plugins[name].post_init()
 
     def enable_all(self, names=None, config=None):
@@ -184,7 +179,7 @@ class PluginManager(object):
                             configuration dictionaries, as used by
                             :meth:`~PluginManager.enable`.
         """
-        names = names if names else PLUGIN_REGISTRY.keys()
+        names = names or PLUGIN_REGISTRY.keys()
         if config is None:
             config = {}
         for name in names:
@@ -330,7 +325,7 @@ class BasePlugin(object):
         if self.xmpp is not None:
             self.xmpp.del_event_handler('session_bind', self.session_bind)
         self.plugin_end()
-        log.debug('Disabled Plugin: %s' % self.description)
+        log.debug(f'Disabled Plugin: {self.description}')
 
     def plugin_init(self):
         """Initialize plugin state, such as registering event handlers."""

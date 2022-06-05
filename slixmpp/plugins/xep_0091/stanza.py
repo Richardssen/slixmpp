@@ -29,13 +29,13 @@ class LegacyDelay(ElementBase):
 
     def get_stamp(self):
         timestamp = self._get_attr('stamp')
-        return xep_0082.parse('%sZ' % timestamp) if timestamp else None
+        return xep_0082.parse(f'{timestamp}Z') if timestamp else None
 
     def set_stamp(self, value):
         if isinstance(value, dt.datetime):
             value = value.astimezone(xep_0082.tzutc)
             value = xep_0082.format_datetime(value)
-        self._set_attr('stamp', value[0:19].replace('-', ''))
+        self._set_attr('stamp', value[:19].replace('-', ''))
 
     def get_text(self):
         return self.xml.text

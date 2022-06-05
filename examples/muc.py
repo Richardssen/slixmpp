@@ -48,8 +48,7 @@ class MUCBot(slixmpp.ClientXMPP):
         # any presences you send yourself. To limit event handling
         # to a single room, use the events muc::room@server::presence,
         # muc::room@server::got_online, or muc::room@server::got_offline.
-        self.add_event_handler("muc::%s::got_online" % self.room,
-                               self.muc_online)
+        self.add_event_handler(f"muc::{self.room}::got_online", self.muc_online)
 
 
     def start(self, event):
@@ -96,9 +95,11 @@ class MUCBot(slixmpp.ClientXMPP):
                    how it may be used.
         """
         if msg['mucnick'] != self.nick and self.nick in msg['body']:
-            self.send_message(mto=msg['from'].bare,
-                              mbody="I heard that, %s." % msg['mucnick'],
-                              mtype='groupchat')
+            self.send_message(
+                mto=msg['from'].bare,
+                mbody=f"I heard that, {msg['mucnick']}.",
+                mtype='groupchat',
+            )
 
     def muc_online(self, presence):
         """
@@ -113,10 +114,11 @@ class MUCBot(slixmpp.ClientXMPP):
                         to see how else it may be used.
         """
         if presence['muc']['nick'] != self.nick:
-            self.send_message(mto=presence['from'].bare,
-                              mbody="Hello, %s %s" % (presence['muc']['role'],
-                                                      presence['muc']['nick']),
-                              mtype='groupchat')
+            self.send_message(
+                mto=presence['from'].bare,
+                mbody=f"Hello, {presence['muc']['role']} {presence['muc']['nick']}",
+                mtype='groupchat',
+            )
 
 
 if __name__ == '__main__':

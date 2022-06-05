@@ -45,7 +45,7 @@ class MAM(slixmpp.ClientXMPP):
                 forwarded = msg['mam_result']['forwarded']
                 timestamp = forwarded['delay']['stamp']
                 message = forwarded['stanza']
-                print('[%s] %s: %s' % (timestamp, message['from'], message['body']))
+                print(f"[{timestamp}] {message['from']}: {message['body']}")
             page += 1
         self.disconnect()
 

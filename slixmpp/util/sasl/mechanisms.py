@@ -48,11 +48,10 @@ class LOGIN(Mech):
         if not challenge:
             return b''
 
-        if self.step == 0:
-            self.step = 1
-            return self.credentials['username']
-        else:
+        if self.step != 0:
             return self.credentials['password']
+        self.step = 1
+        return self.credentials['username']
 
 
 @sasl_mech(2)
@@ -64,12 +63,12 @@ class PLAIN(Mech):
     security = {'encrypted', 'encrypted_plain', 'unencrypted_plain'}
 
     def setup(self, name):
-        if not self.security_settings['encrypted']:
-            if not self.security_settings['unencrypted_plain']:
-                raise SASLCancelled('PLAIN without encryption')
-        else:
+        if self.security_settings['encrypted']:
             if not self.security_settings['encrypted_plain']:
                 raise SASLCancelled('PLAIN with encryption')
+
+        elif not self.security_settings['unencrypted_plain']:
+            raise SASLCancelled('PLAIN without encryption')
 
     def process(self, challenge=b''):
         authzid = self.credentials['authzid']
@@ -110,7 +109,13 @@ class X_FACEBOOK_PLATFORM(Mech):
                 b'api_key': self.credentials['api_key']
             }
 
-            resp = '&'.join(['%s=%s' % (k.decode("utf-8"), v.decode("utf-8")) for k, v in resp_data.items()])
+            resp = '&'.join(
+                [
+                    f'{k.decode("utf-8")}={v.decode("utf-8")}'
+                    for k, v in resp_data.items()
+                ]
+            )
+
             return bytes(resp)
         return b''
 
@@ -160,10 +165,12 @@ class CRAM(Mech):
         self.hash_name = name[5:]
         self.hash = hash(self.hash_name)
         if self.hash is None:
-            raise SASLCancelled('Unknown hash: %s' % self.hash_name)
-        if not self.security_settings['encrypted']:
-            if not self.security_settings['unencrypted_cram']:
-                raise SASLCancelled('Unecrypted CRAM-%s' % self.hash_name)
+            raise SASLCancelled(f'Unknown hash: {self.hash_name}')
+        if (
+            not self.security_settings['encrypted']
+            and not self.security_settings['unencrypted_cram']
+        ):
+            raise SASLCancelled(f'Unecrypted CRAM-{self.hash_name}')
 
     def process(self, challenge=b''):
         if not challenge:
@@ -198,10 +205,12 @@ class SCRAM(Mech):
         self.hash = hash(self.hash_name)
 
         if self.hash is None:
-            raise SASLCancelled('Unknown hash: %s' % self.hash_name)
-        if not self.security_settings['encrypted']:
-            if not self.security_settings['unencrypted_scram']:
-                raise SASLCancelled('Unencrypted SCRAM')
+            raise SASLCancelled(f'Unknown hash: {self.hash_name}')
+        if (
+            not self.security_settings['encrypted']
+            and not self.security_settings['unencrypted_scram']
+        ):
+            raise SASLCancelled('Unencrypted SCRAM')
 
         self.step = 0
         self._mutual_auth = False
@@ -213,7 +222,7 @@ class SCRAM(Mech):
         text = bytes(text)
         ui1 = self.HMAC(text, salt + b'\0\0\0\01')
         ui = ui1
-        for i in range(iterations - 1):
+        for _ in range(iterations - 1):
             ui1 = self.HMAC(text, ui1)
             ui = XOR(ui, ui1)
         return ui
@@ -234,10 +243,7 @@ class SCRAM(Mech):
         return "".join(escaped).encode("utf-8")
 
     def parse(self, challenge):
-        items = {}
-        for key, value in [item.split(b'=', 1) for item in challenge.split(b',')]:
-            items[key] = value
-        return items
+        return dict([item.split(b'=', 1) for item in challenge.split(b',')])
 
     def process(self, challenge=b''):
         steps = [self.process_1, self.process_2, self.process_3]
@@ -247,15 +253,11 @@ class SCRAM(Mech):
         self.step = 1
         data = {}
 
-        self.cnonce = bytes(('%s' % random.random())[2:])
+        self.cnonce = bytes(f'{random.random()}'[2:])
 
         gs2_cbind_flag = b'n'
         if self.credentials['channel_binding']:
-            if self.use_channel_binding:
-                gs2_cbind_flag = b'p=tls-unique'
-            else:
-                gs2_cbind_flag = b'y'
-
+            gs2_cbind_flag = b'p=tls-unique' if self.use_channel_binding else b'y'
         authzid = b''
         if self.credentials['authzid']:
             authzid = b'a=' + self.saslname(self.credentials['authzid'])
@@ -307,10 +309,9 @@ class SCRAM(Mech):
 
         self.server_signature = self.HMAC(server_key, auth_message)
 
-        client_final_message = client_final_message_without_proof + \
-                               b',p=' + b64encode(client_proof)
-
-        return client_final_message
+        return (
+            client_final_message_without_proof + b',p=' + b64encode(client_proof)
+        )
 
     def process_3(self, challenge):
         data = self.parse(challenge)
@@ -341,10 +342,12 @@ class DIGEST(Mech):
         self.hash_name = name[7:]
         self.hash = hash(self.hash_name)
         if self.hash is None:
-            raise SASLCancelled('Unknown hash: %s' % self.hash_name)
-        if not self.security_settings['encrypted']:
-            if not self.security_settings['unencrypted_digest']:
-                raise SASLCancelled('Unencrypted DIGEST')
+            raise SASLCancelled(f'Unknown hash: {self.hash_name}')
+        if (
+            not self.security_settings['encrypted']
+            and not self.security_settings['unencrypted_digest']
+        ):
+            raise SASLCancelled('Unencrypted DIGEST')
 
         self.qops = [b'auth']
         self.qop = b'auth'
@@ -373,14 +376,14 @@ class DIGEST(Mech):
                 else:
                     var_name += char
             elif state == 'value':
-                if char == b'"':
-                    state = 'quote'
-                elif char == b',':
+                if char == b',':
                     if var_name:
                         data[var_name.decode('utf-8')] = var_value
                     var_name = b''
                     var_value = b''
                     state = 'var'
+                elif char == b'"':
+                    state = 'quote'
                 else:
                     var_value += char
             elif state == 'escaped':
@@ -392,15 +395,14 @@ class DIGEST(Mech):
                     state = 'end'
                 else:
                     var_value += char
+            elif char == b',':
+                if var_name:
+                    data[var_name.decode('utf-8')] = var_value
+                var_name = b''
+                var_value = b''
+                state = 'var'
             else:
-                if char == b',':
-                    if var_name:
-                        data[var_name.decode('utf-8')] = var_value
-                    var_name = b''
-                    var_value = b''
-                    state = 'var'
-                else:
-                    var_value += char
+                var_value += char
 
         if var_name:
             data[var_name.decode('utf-8')] = var_value
@@ -490,7 +492,7 @@ class DIGEST(Mech):
                 raise SASLMutualAuthFailed()
         else:
             self.nonce_count = 1
-            self.cnonce = bytes('%s' % random.random())[2:]
+            self.cnonce = bytes(f'{random.random()}')[2:]
             self.qops = data.get('qop', [b'auth'])
             self.qop = b'auth'
             if 'nonce' in data:
@@ -540,8 +542,5 @@ else:
 
                 resp = kerberos.authGSSClientResponse(self.gss)
             except kerberos.GSSError as e:
-                raise SASLCancelled('Kerberos error: %s' % e)
-            if not resp:
-                return b''
-            else:
-                return b64decode(resp)
+                raise SASLCancelled(f'Kerberos error: {e}')
+            return b64decode(resp) if resp else b''

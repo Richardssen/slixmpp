@@ -91,10 +91,9 @@ class RegisterBot(slixmpp.ClientXMPP):
 
         try:
             await resp.send()
-            logging.info("Account created for %s!" % self.boundjid)
+            logging.info(f"Account created for {self.boundjid}!")
         except IqError as e:
-            logging.error("Could not register account: %s" %
-                    e.iq['error']['text'])
+            logging.error(f"Could not register account: {e.iq['error']['text']}")
             self.disconnect()
         except IqTimeout:
             logging.error("No response from server.")

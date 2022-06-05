@@ -158,9 +158,7 @@ class RosterItem(object):
         if one has been provided.
         """
         if self.db:
-            item = self.db.load(self.owner, self.jid,
-                                       self._db_state)
-            if item:
+            if item := self.db.load(self.owner, self.jid, self._db_state):
                 self['name'] = item['name']
                 self['groups'] = item['groups']
                 self['from'] = item['from']
@@ -193,12 +191,11 @@ class RosterItem(object):
 
     def __getitem__(self, key):
         """Return a state field's value."""
-        if key in self._state:
-            if key == 'subscription':
-                return self._subscription()
-            return self._state[key]
-        else:
+        if key not in self._state:
             raise KeyError
+        if key == 'subscription':
+            return self._subscription()
+        return self._state[key]
 
     def __setitem__(self, key, value):
         """
@@ -216,7 +213,7 @@ class RosterItem(object):
                 self._state[key] = value
             else:
                 value = str(value).lower()
-                self._state[key] = value in ('true', '1', 'on', 'yes')
+                self._state[key] = value in {'true', '1', 'on', 'yes'}
         else:
             raise KeyError
 

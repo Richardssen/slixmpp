@@ -30,12 +30,9 @@ class XEP_0131(BasePlugin):
     def plugin_end(self):
         self.xmpp['xep_0030'].del_feature(feature=Headers.namespace)
         for header in self.supported_headers:
-            self.xmpp['xep_0030'].del_feature(
-                    feature='%s#%s' % (Headers.namespace, header))
+            self.xmpp['xep_0030'].del_feature(feature=f'{Headers.namespace}#{header}')
 
     def session_bind(self, jid):
         self.xmpp['xep_0030'].add_feature(Headers.namespace)
         for header in self.supported_headers:
-            self.xmpp['xep_0030'].add_feature('%s#%s' % (
-                Headers.namespace,
-                header))
+            self.xmpp['xep_0030'].add_feature(f'{Headers.namespace}#{header}')

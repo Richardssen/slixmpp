@@ -298,10 +298,7 @@ class Categories(ElementBase):
         items = self.xml.findall('{%s}KEYWORD' % self.namespace)
         if items is None:
             return []
-        keywords = []
-        for item in items:
-            keywords.append(item.text)
-        return keywords
+        return [item.text for item in items]
 
     def del_categories(self):
         items = self.xml.findall('{%s}KEYWORD' % self.namespace)
@@ -522,16 +519,13 @@ class TimeZone(ElementBase):
 
     def set_tz(self, value):
         time = xep_0082.time(offset=value)
-        if time[-1] == 'Z':
-            self.xml.text = 'Z'
-        else:
-            self.xml.text = time[-6:]
+        self.xml.text = 'Z' if time[-1] == 'Z' else time[-6:]
 
     def get_tz(self):
         if not self.xml.text:
             return xep_0082.tzutc()
         try:
-            time = xep_0082.parse('00:00:00%s' % self.xml.text)
+            time = xep_0082.parse(f'00:00:00{self.xml.text}')
             return time.tzinfo
         except ValueError:
             return self.xml.text

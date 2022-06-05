@@ -53,10 +53,7 @@ class ResultIterator:
         self.amount = amount
         self.start = start
         self.interface = interface
-        if recv_interface:
-            self.recv_interface = recv_interface
-        else:
-            self.recv_interface = interface
+        self.recv_interface = recv_interface or interface
         self.pre_cb = pre_cb
         self.post_cb = post_cb
         self.results = results

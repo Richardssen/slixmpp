@@ -63,10 +63,10 @@ class LocationBot(ClientXMPP):
 
     def user_location_publish(self, msg):
         geo = msg['pubsub_event']['items']['item']['geoloc']
-        print("%s is at:" % msg['from'])
+        print(f"{msg['from']} is at:")
         for key, val in geo.values.items():
             if val:
-                print("  %s: %s" % (key, val))
+                print(f"  {key}: {val}")
 
 
 if __name__ == '__main__':

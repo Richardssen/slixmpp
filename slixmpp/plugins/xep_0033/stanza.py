@@ -71,10 +71,7 @@ class Address(ElementBase):
 
 def _addr_filter(atype):
     def _type_filter(addr):
-        if isinstance(addr, Address):
-            if atype == 'all' or addr['type'] == atype:
-                return True
-        return False
+        return isinstance(addr, Address) and (atype == 'all' or addr['type'] == atype)
     return _type_filter
 
 
@@ -113,9 +110,9 @@ for atype in ('all', 'bcc', 'cc', 'noreply', 'replyroom', 'replyto', 'to'):
     get_multi, set_multi, del_multi = _build_methods(atype)
 
     Addresses.interfaces.add(atype)
-    setattr(Addresses, "get_%s" % atype, get_multi)
-    setattr(Addresses, "set_%s" % atype, set_multi)
-    setattr(Addresses, "del_%s" % atype, del_multi)
+    setattr(Addresses, f"get_{atype}", get_multi)
+    setattr(Addresses, f"set_{atype}", set_multi)
+    setattr(Addresses, f"del_{atype}", del_multi)
 
     if atype == 'all':
         Addresses.interfaces.add('addresses')

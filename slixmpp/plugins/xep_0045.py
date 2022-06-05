@@ -151,7 +151,7 @@ class XEP_0045(BasePlugin):
     def handle_config_change(self, msg):
         """Handle a MUC configuration change (with status code)."""
         self.xmpp.event('groupchat_config_status', msg)
-        self.xmpp.event('muc::%s::config_status' % msg['from'].bare , msg)
+        self.xmpp.event(f"muc::{msg['from'].bare}::config_status", msg)
 
     def handle_groupchat_presence(self, pr):
         """ Handle a presence in a muc.
@@ -175,23 +175,23 @@ class XEP_0045(BasePlugin):
             self.rooms[entry['room']][entry['nick']] = entry
         log.debug("MUC presence from %s/%s : %s", entry['room'],entry['nick'], entry)
         self.xmpp.event("groupchat_presence", pr)
-        self.xmpp.event("muc::%s::presence" % entry['room'], pr)
+        self.xmpp.event(f"muc::{entry['room']}::presence", pr)
         if got_offline:
-            self.xmpp.event("muc::%s::got_offline" % entry['room'], pr)
+            self.xmpp.event(f"muc::{entry['room']}::got_offline", pr)
         if got_online:
-            self.xmpp.event("muc::%s::got_online" % entry['room'], pr)
+            self.xmpp.event(f"muc::{entry['room']}::got_online", pr)
 
     def handle_groupchat_message(self, msg: Message) -> None:
         """ Handle a message event in a muc.
         """
         self.xmpp.event('groupchat_message', msg)
-        self.xmpp.event("muc::%s::message" % msg['from'].bare, msg)
+        self.xmpp.event(f"muc::{msg['from'].bare}::message", msg)
 
     def handle_groupchat_error_message(self, msg):
         """ Handle a message error event in a muc.
         """
         self.xmpp.event('groupchat_message_error', msg)
-        self.xmpp.event("muc::%s::message_error" % msg['from'].bare, msg)
+        self.xmpp.event(f"muc::{msg['from'].bare}::message_error", msg)
 
 
 
@@ -241,7 +241,10 @@ class XEP_0045(BasePlugin):
     def join_muc(self, room, nick, maxhistory="0", password='', wait=False, pstatus=None, pshow=None, pfrom=None):
         """ Join the specified room, requesting 'maxhistory' lines of history.
         """
-        stanza = self.xmpp.make_presence(pto="%s/%s" % (room, nick), pstatus=pstatus, pshow=pshow, pfrom=pfrom)
+        stanza = self.xmpp.make_presence(
+            pto=f"{room}/{nick}", pstatus=pstatus, pshow=pshow, pfrom=pfrom
+        )
+
         x = ET.Element('{http://jabber.org/protocol/muc}x')
         if password:
             passelement = ET.Element('{http://jabber.org/protocol/muc}password')
@@ -259,7 +262,10 @@ class XEP_0045(BasePlugin):
             self.xmpp.send(stanza)
         else:
             #wait for our own room presence back
-            expect = ET.Element("{%s}presence" % self.xmpp.default_ns, {'from':"%s/%s" % (room, nick)})
+            expect = ET.Element(
+                "{%s}presence" % self.xmpp.default_ns, {'from': f"{room}/{nick}"}
+            )
+
             self.xmpp.send(stanza, expect)
         self.rooms[room] = {}
         self.our_nicks[room] = nick
@@ -345,9 +351,12 @@ class XEP_0045(BasePlugin):
         """ Leave the specified room.
         """
         if msg:
-            self.xmpp.send_presence(pshow='unavailable', pto="%s/%s" % (room, nick), pstatus=msg, pfrom=pfrom)
+            self.xmpp.send_presence(
+                pshow='unavailable', pto=f"{room}/{nick}", pstatus=msg, pfrom=pfrom
+            )
+
         else:
-            self.xmpp.send_presence(pshow='unavailable', pto="%s/%s" % (room, nick), pfrom=pfrom)
+            self.xmpp.send_presence(pshow='unavailable', pto=f"{room}/{nick}", pfrom=pfrom)
         del self.rooms[room]
 
     def get_room_config(self, room, ifrom=''):
@@ -390,7 +399,7 @@ class XEP_0045(BasePlugin):
     def get_our_jid_in_room(self, room_jid):
         """ Return the jid we're using in a room.
         """
-        return "%s/%s" % (room_jid, self.our_nicks[room_jid])
+        return f"{room_jid}/{self.our_nicks[room_jid]}"
 
     def get_jid_property(self, room, nick, jid_property):
         """ Get the property of a nick in a room, such as its 'jid' or 'affiliation'
@@ -404,17 +413,15 @@ class XEP_0045(BasePlugin):
     def get_roster(self, room):
         """ Get the list of nicks in a room.
         """
-        if room not in self.rooms.keys():
-            return None
-        return self.rooms[room].keys()
+        return None if room not in self.rooms.keys() else self.rooms[room].keys()
 
-    def get_users_by_affiliation(cls, room, affiliation='member', ifrom=None):
+    def get_users_by_affiliation(self, room, affiliation='member', ifrom=None):
         if affiliation not in ('outcast', 'member', 'admin', 'owner', 'none'):
             raise TypeError
         query = ET.Element('{http://jabber.org/protocol/muc#admin}query')
         item = ET.Element('{http://jabber.org/protocol/muc#admin}item', {'affiliation': affiliation})
         query.append(item)
-        iq = cls.xmpp.Iq(sto=room, sfrom=ifrom, stype='get')
+        iq = self.xmpp.Iq(sto=room, sfrom=ifrom, stype='get')
         iq.append(query)
         return iq.send()
 

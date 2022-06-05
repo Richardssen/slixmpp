@@ -28,10 +28,10 @@ class Compression(ElementBase):
     plugin_attrib_map = {}
 
     def get_methods(self):
-        methods = []
-        for method in self.xml.findall('{%s}method' % self.namespace):
-            methods.append(method.text)
-        return methods
+        return [
+            method.text
+            for method in self.xml.findall('{%s}method' % self.namespace)
+        ]
 
 
 class Compress(StanzaBase):
@@ -124,7 +124,7 @@ class XEP_0138(BasePlugin):
     def _handle_compression(self, features):
         for method in features['compression']['methods']:
             if method in self.compression_methods:
-                log.info('Attempting to use %s compression' % method)
+                log.info(f'Attempting to use {method} compression')
                 c = Compress(self.xmpp)
                 c['method'] = method
                 c.send(now=True)

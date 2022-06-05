@@ -29,10 +29,8 @@ class Mechanisms(ElementBase):
         """
         """
         results = []
-        mechs = self.xml.findall('{%s}mechanism' % self.namespace)
-        if mechs:
-            for mech in mechs:
-                results.append(mech.text)
+        if mechs := self.xml.findall('{%s}mechanism' % self.namespace):
+            results.extend(mech.text for mech in mechs)
         return results
 
     def set_mechanisms(self, values):
@@ -47,7 +45,6 @@ class Mechanisms(ElementBase):
     def del_mechanisms(self):
         """
         """
-        mechs = self.xml.findall('{%s}mechanism' % self.namespace)
-        if mechs:
+        if mechs := self.xml.findall('{%s}mechanism' % self.namespace):
             for mech in mechs:
                 self.xml.remove(mech)

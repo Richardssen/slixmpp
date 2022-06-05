@@ -53,10 +53,7 @@ class ComponentXMPP(BaseXMPP):
         if not plugin_config:
             plugin_config = {}
 
-        if use_jc_ns:
-            default_ns = 'jabber:client'
-        else:
-            default_ns = 'jabber:component:accept'
+        default_ns = 'jabber:client' if use_jc_ns else 'jabber:component:accept'
         BaseXMPP.__init__(self, jid, default_ns)
 
         self.auto_authorize = None
@@ -127,7 +124,7 @@ class ComponentXMPP(BaseXMPP):
 
         # Construct a hash of the stream ID and the component secret.
         sid = xml.get('id', '')
-        pre_hash = bytes('%s%s' % (sid, self.secret), 'utf-8')
+        pre_hash = bytes(f'{sid}{self.secret}', 'utf-8')
 
         handshake = ET.Element('{jabber:component:accept}handshake')
         handshake.text = hashlib.sha1(pre_hash).hexdigest().lower()

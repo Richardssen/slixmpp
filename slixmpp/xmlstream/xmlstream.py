@@ -292,7 +292,7 @@ class XMLStream(asyncio.BaseProtocol):
         record = await self.pick_dns_answer(self.default_domain)
         if record is not None:
             host, address, dns_port = record
-            port = dns_port if dns_port else self.address[1]
+            port = dns_port or self.address[1]
             self.address = (address, port)
             self._service_name = host
         else:
@@ -300,11 +300,7 @@ class XMLStream(asyncio.BaseProtocol):
             # and try (host, port) as a last resort
             self.dns_answers = None
 
-        if self.use_ssl:
-            ssl_context = self.get_ssl_context()
-        else:
-            ssl_context = None
-
+        ssl_context = self.get_ssl_context() if self.use_ssl else None
         await asyncio.sleep(self.connect_loop_wait, loop=self.loop)
         if self._current_connection_attempt is None:
             return
@@ -316,8 +312,11 @@ class XMLStream(asyncio.BaseProtocol):
                                                    server_hostname=self.default_domain if self.use_ssl else None)
             self.connect_loop_wait = 0
         except Socket.gaierror as e:
-            self.event('connection_failed',
-                       'No DNS record available for %s' % self.default_domain)
+            self.event(
+                'connection_failed',
+                f'No DNS record available for {self.default_domain}',
+            )
+
         except OSError as e:
             log.debug('Connection failed: %s', e)
             self.event("connection_failed", e)
@@ -687,12 +686,10 @@ class XMLStream(asyncio.BaseProtocol):
 
         :param name: The name of the handler.
         """
-        idx = 0
-        for handler in self.__handlers:
+        for idx, handler in enumerate(self.__handlers):
             if handler.name == name:
                 self.__handlers.pop(idx)
                 return True
-            idx += 1
         return False
 
     async def get_dns_records(self, domain, port=None):
@@ -743,7 +740,7 @@ class XMLStream(asyncio.BaseProtocol):
         :param disposable: If set to ``True``, the handler will be
                            discarded after one use. Defaults to ``False``.
         """
-        if not name in self.__event_handlers:
+        if name not in self.__event_handlers:
             self.__event_handlers[name] = []
         self.__event_handlers[name].append((pointer, disposable))
 
@@ -833,8 +830,7 @@ class XMLStream(asyncio.BaseProtocol):
                        be reset and repeat after executing.
         """
         if name in self.scheduled_events:
-            raise ValueError(
-                "There is already a scheduled event of name: %s" % name)
+            raise ValueError(f"There is already a scheduled event of name: {name}")
         if seconds is None:
             seconds = RESPONSE_TIMEOUT
         cb = functools.partial(callback, *args, **kwargs)
@@ -853,7 +849,7 @@ class XMLStream(asyncio.BaseProtocol):
             handle = self.scheduled_events.pop(name)
             handle.cancel()
         except KeyError:
-            log.debug("Tried to cancel unscheduled event: %s" % (name,))
+            log.debug(f"Tried to cancel unscheduled event: {name}")
 
     def _safe_cb_run(self, name, cb):
         log.debug('Scheduled event: %s', name)
@@ -900,12 +896,11 @@ class XMLStream(asyncio.BaseProtocol):
                                  filters is useful when resending stanzas.
                                  Defaults to ``True``.
         """
-        if isinstance(data, ElementBase):
-            if use_filters:
-                for filter in self.__filters['out']:
-                    data = filter(data)
-                    if data is None:
-                        return
+        if isinstance(data, ElementBase) and use_filters:
+            for filter in self.__filters['out']:
+                data = filter(data)
+                if data is None:
+                    return
 
         if isinstance(data, ElementBase):
             if use_filters:
@@ -955,8 +950,10 @@ class XMLStream(asyncio.BaseProtocol):
             default_ns = self.default_ns
         stanza_type = StanzaBase
         for stanza_class in self.__root_stanza:
-            if xml.tag == "{%s}%s" % (default_ns, stanza_class.name) or \
-               xml.tag == stanza_class.tag_name():
+            if xml.tag in [
+                "{%s}%s" % (default_ns, stanza_class.name),
+                stanza_class.tag_name(),
+            ]:
                 stanza_type = stanza_class
                 break
         stanza = stanza_type(self, xml)

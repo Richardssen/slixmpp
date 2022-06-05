@@ -19,7 +19,7 @@ class Start:
         self.elem = elem
 
     def __repr__(self):
-        return 'Start(%s)' % self.elem
+        return f'Start({self.elem})'
 
 
 class End:
@@ -27,7 +27,7 @@ class End:
         self.elem = elem
 
     def __repr__(self):
-        return 'End(%s)' % self.elem
+        return f'End({self.elem})'
 
 
 class XEP_0394(BasePlugin):
@@ -53,8 +53,7 @@ class XEP_0394(BasePlugin):
         for markup in markup_elem['substanzas']:
             start = markup['start']
             end = markup['end']
-            split_points.append(start)
-            split_points.append(end)
+            split_points.extend((start, end))
             elements.setdefault(start, []).append(Start(markup))
             elements.setdefault(end, []).append(End(markup))
             if isinstance(markup, List):
@@ -69,26 +68,19 @@ class XEP_0394(BasePlugin):
         new_body = [[]]
         for i, letter in enumerate(body + '\x00'):
             if i in split_points:
-                body_elements = []
-                for elem in elements[i]:
-                    body_elements.append(elem)
-                new_body.append(body_elements)
-                new_body.append([])
+                body_elements = list(elements[i])
+                new_body.extend((body_elements, []))
             new_body[-1].append(letter)
         new_body[-1] = new_body[-1][:-1]
-        final = []
-        for chunk in new_body:
-            if not chunk:
-                continue
-            final.append(''.join(chunk) if isinstance(chunk[0], str) else chunk)
-        return final
+        return [
+            ''.join(chunk) if isinstance(chunk[0], str) else chunk
+            for chunk in new_body
+            if chunk
+        ]
 
     def to_plain_text(self, body, markup_elem):
         chunks = self._split_first_level(body, markup_elem)
-        final = []
-        for chunk in chunks:
-            if isinstance(chunk, str):
-                final.append(chunk)
+        final = [chunk for chunk in chunks if isinstance(chunk, str)]
         return ''.join(final)
 
     def to_xhtml_im(self, body, markup_elem):
@@ -105,12 +97,8 @@ class XEP_0394(BasePlugin):
                               .replace('\n', '<br/>'))
                 final.append(chunk)
                 continue
-            num_end = 0
-            for elem in chunk:
-                if isinstance(elem, End):
-                    num_end += 1
-
-            for i in range(num_end):
+            num_end = sum(isinstance(elem, End) for elem in chunk)
+            for _ in range(num_end):
                 stack_top = stack.pop()
                 for elem in chunk:
                     if not isinstance(elem, End):
@@ -138,12 +126,12 @@ class XEP_0394(BasePlugin):
                 if isinstance(elem, Span):
                     style = []
                     for type_ in elem['types']:
-                        if type_ == 'emphasis':
-                            style.append('font-style: italic;')
                         if type_ == 'code':
                             style.append('font-family: monospace;')
-                        if type_ == 'deleted':
+                        elif type_ == 'deleted':
                             style.append('text-decoration: line-through;')
+                        elif type_ == 'emphasis':
+                            style.append('font-style: italic;')
                     final.append("<span style='%s'>" % ' '.join(style))
                 elif isinstance(elem, BlockCode):
                     final.append('<pre><code>')

@@ -21,7 +21,7 @@ sys.path.insert(0, os.path.abspath('..'))
 
 # get version automagically from source tree
 from slixmpp.version import __version__ as version
-release = ".".join(version.split(".")[0:2])
+release = ".".join(version.split(".")[:2])
 
 # -- General configuration -----------------------------------------------------
 
@@ -47,7 +47,7 @@ master_doc = 'index'
 # General information about the project.
 project = u'Slixmpp'
 year = datetime.datetime.now().year
-copyright = u'{}, Nathan Fritz, Lance Stout'.format(year)
+copyright = f'{year}, Nathan Fritz, Lance Stout'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -115,7 +115,7 @@ html_theme = 'haiku'
 html_title = 'slixmpp'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
-html_short_title = '%s Documentation' % release
+html_short_title = f'{release} Documentation'
 
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.

@@ -49,11 +49,11 @@ class Register(ElementBase):
         self._set_sub_text(value, '', keep=True)
 
     def get_fields(self):
-        fields = set()
-        for field in self.form_fields:
-            if self.xml.find('{%s}%s' % (self.namespace, field)) is not None:
-                fields.add(field)
-        return fields
+        return {
+            field
+            for field in self.form_fields
+            if self.xml.find('{%s}%s' % (self.namespace, field)) is not None
+        }
 
     def set_fields(self, fields):
         del self['fields']

@@ -31,8 +31,7 @@ class EventItem(ElementBase):
         self.xml.append(value)
 
     def get_payload(self):
-        children = list(self.xml)
-        if len(children) > 0:
+        if children := list(self.xml):
             return children[0]
 
     def del_payload(self):

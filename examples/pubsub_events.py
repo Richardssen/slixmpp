@@ -44,9 +44,10 @@ class PubsubEvents(slixmpp.ClientXMPP):
 
     def _publish(self, msg):
         """Handle receiving a publish item event."""
-        print('Published item %s to %s:' % (
-            msg['pubsub_event']['items']['item']['id'],
-            msg['pubsub_event']['items']['node']))
+        print(
+            f"Published item {msg['pubsub_event']['items']['item']['id']} to {msg['pubsub_event']['items']['node']}:"
+        )
+
         data = msg['pubsub_event']['items']['item']['payload']
         if data is not None:
             print(tostring(data))
@@ -55,30 +56,29 @@ class PubsubEvents(slixmpp.ClientXMPP):
 
     def _retract(self, msg):
         """Handle receiving a retract item event."""
-        print('Retracted item %s from %s' % (
-            msg['pubsub_event']['items']['retract']['id'],
-            msg['pubsub_event']['items']['node']))
+        print(
+            f"Retracted item {msg['pubsub_event']['items']['retract']['id']} from {msg['pubsub_event']['items']['node']}"
+        )
 
     def _purge(self, msg):
         """Handle receiving a node purge event."""
-        print('Purged all items from %s' % (
-            msg['pubsub_event']['purge']['node']))
+        print(f"Purged all items from {msg['pubsub_event']['purge']['node']}")
 
     def _delete(self, msg):
         """Handle receiving a node deletion event."""
-        print('Deleted node %s' % (
-           msg['pubsub_event']['delete']['node']))
+        print(f"Deleted node {msg['pubsub_event']['delete']['node']}")
 
     def _config(self, msg):
         """Handle receiving a node configuration event."""
-        print('Configured node %s:' % (
-            msg['pubsub_event']['configuration']['node']))
+        print(f"Configured node {msg['pubsub_event']['configuration']['node']}:")
         print(msg['pubsub_event']['configuration']['form'])
 
     def _subscription(self, msg):
         """Handle receiving a node subscription event."""
-        print('Subscription change for node %s:' % (
-            msg['pubsub_event']['subscription']['node']))
+        print(
+            f"Subscription change for node {msg['pubsub_event']['subscription']['node']}:"
+        )
+
         print(msg['pubsub_event']['subscription'])
 
 

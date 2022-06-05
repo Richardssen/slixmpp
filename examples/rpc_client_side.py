@@ -43,7 +43,7 @@ def main():
 
     thermostat = session.new_proxy('thermostat@xmpp.org/rpc', Thermostat)
 
-    print("Current temperature is %s" % thermostat.get_temperature())
+    print(f"Current temperature is {thermostat.get_temperature()}")
 
     thermostat.set_temperature(20)
 

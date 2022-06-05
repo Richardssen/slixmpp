@@ -21,13 +21,13 @@ def _extract_data(data, kind):
     begin_headers = False
     begin_data = False
     for line in data.split('\n'):
-        if not begin_headers and 'BEGIN PGP %s' % kind in line:
+        if not begin_headers and f'BEGIN PGP {kind}' in line:
             begin_headers = True
             continue
         if begin_headers and line.strip() == '':
             begin_data = True
             continue
-        if 'END PGP %s' % kind in line:
+        if f'END PGP {kind}' in line:
             return '\n'.join(stripped)
         if begin_data:
             stripped.append(line)
@@ -87,21 +87,19 @@ class XEP_0027(BasePlugin):
                 self._handle_unverified_signed_presence)
 
     def _sign_presence(self, stanza):
-        if isinstance(stanza, Presence):
-            if stanza['type'] == 'available' or \
-                    stanza['type'] in Presence.showtypes:
-                stanza['signed'] = stanza['status']
+        if isinstance(stanza, Presence) and (
+            stanza['type'] == 'available' or stanza['type'] in Presence.showtypes
+        ):
+            stanza['signed'] = stanza['status']
         return stanza
 
     def sign(self, data, jid=None):
-        keyid = self.get_keyid(jid)
-        if keyid:
+        if keyid := self.get_keyid(jid):
             signed = self.gpg.sign(data, keyid=keyid)
             return _extract_data(signed.data, 'SIGNATURE')
 
     def encrypt(self, data, jid=None):
-        keyid = self.get_keyid(jid)
-        if keyid:
+        if keyid := self.get_keyid(jid):
             enc = self.gpg.encrypt(data, keyid)
             return _extract_data(enc.data, 'MESSAGE')
 
@@ -122,8 +120,7 @@ class XEP_0027(BasePlugin):
                    '\n' + \
                    '%s\n' + \
                    '-----END PGP SIGNATURE-----\n'
-        v = self.gpg.verify(template % (data, sig))
-        return v
+        return self.gpg.verify(template % (data, sig))
 
     def set_keyid(self, jid=None, keyid=None):
         self.api['set_keyid'](jid, args=keyid)

@@ -67,7 +67,6 @@ class Catalog(ElementBase):
 
     def get_to(self):
         return JID(self._get_attr('to'))
-        pass
 
     def set_to(self, value):
         return self._set_attr('to', str(value))
@@ -120,9 +119,7 @@ class ESSLabel(ElementBase):
     interfaces = {'value'}
 
     def get_value(self):
-        if self.xml.text:
-            return b64decode(bytes(self.xml.text))
-        return ''
+        return b64decode(bytes(self.xml.text)) if self.xml.text else ''
 
     def set_value(self, value):
         self.xml.text = ''

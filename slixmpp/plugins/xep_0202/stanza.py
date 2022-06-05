@@ -85,7 +85,7 @@ class EntityTime(ElementBase):
         tzo = self._get_sub_text('tzo')
         if tzo == '':
             tzo = 'Z'
-        time = xep_0082.parse('00:00:00%s' % tzo)
+        time = xep_0082.parse(f'00:00:00{tzo}')
         return time.tzinfo
 
     def set_tzo(self, value):
@@ -109,7 +109,7 @@ class EntityTime(ElementBase):
         value = self._get_sub_text('utc')
         if value == '':
             return xep_0082.parse(xep_0082.datetime())
-        return xep_0082.parse('%sZ' % value)
+        return xep_0082.parse(f'{value}Z')
 
     def set_utc(self, value):
         """

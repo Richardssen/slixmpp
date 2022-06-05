@@ -82,8 +82,7 @@ class Item(ElementBase):
             self.xml.append(value)
 
     def get_payload(self):
-        children = list(self.xml)
-        if len(children) > 0:
+        if children := list(self.xml):
             return children[0]
 
     def del_payload(self):
@@ -202,8 +201,7 @@ class Options(ElementBase):
 
     def get_options(self):
         config = self.xml.find('{jabber:x:data}x')
-        form = xep_0004.Form(xml=config)
-        return form
+        return xep_0004.Form(xml=config)
 
     def set_options(self, value):
         if isinstance(value, ElementBase):
@@ -234,17 +232,15 @@ class PublishOptions(ElementBase):
         config = self.xml.find('{jabber:x:data}x')
         if config is None:
             return None
-        form = xep_0004.Form(xml=config)
-        return form
+        return xep_0004.Form(xml=config)
 
     def set_publish_options(self, value):
         if value is None:
             self.del_publish_options()
+        elif isinstance(value, ElementBase):
+            self.xml.append(value.xml)
         else:
-            if isinstance(value, ElementBase):
-                self.xml.append(value.xml)
-            else:
-                self.xml.append(value)
+            self.xml.append(value)
         return self
 
     def del_publish_options(self):

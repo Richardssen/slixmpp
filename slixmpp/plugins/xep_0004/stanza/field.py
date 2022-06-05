@@ -31,10 +31,7 @@ class FormField(ElementBase):
                          'list-multi', 'text-multi'}
 
     def setup(self, xml=None):
-        if ElementBase.setup(self, xml):
-            self._type = None
-        else:
-            self._type = self['type']
+        self._type = None if ElementBase.setup(self, xml) else self['type']
 
     def set_type(self, value):
         self._set_attr('type', value)
@@ -48,8 +45,7 @@ class FormField(ElementBase):
             opt['value'] = value
             self.append(opt)
         else:
-            raise ValueError("Cannot add options to " + \
-                             "a %s field." % self['type'])
+            raise ValueError(("Cannot add options to " + f"a {self['type']} field."))
 
     def del_options(self):
         optsXML = self.xml.findall('{%s}option' % self.namespace)
@@ -86,9 +82,7 @@ class FormField(ElementBase):
         if len(valsXML) == 0:
             return None
         elif self._type == 'boolean':
-            if convert:
-                return valsXML[0].text in self.true_values
-            return valsXML[0].text
+            return valsXML[0].text in self.true_values if convert else valsXML[0].text
         elif self._type in self.multi_value_types or len(valsXML) > 1:
             values = []
             for valXML in valsXML:
@@ -99,9 +93,7 @@ class FormField(ElementBase):
                 values = "\n".join(values)
             return values
         else:
-            if valsXML[0].text is None:
-                return ''
-            return valsXML[0].text
+            return '' if valsXML[0].text is None else valsXML[0].text
 
     def set_answer(self, answer):
         self['value'] = answer
@@ -134,11 +126,10 @@ class FormField(ElementBase):
             if value in self.true_values:
                 valXML = ET.Element(valXMLName)
                 valXML.text = '1'
-                self.xml.append(valXML)
             else:
                 valXML = ET.Element(valXMLName)
                 valXML.text = '0'
-                self.xml.append(valXML)
+            self.xml.append(valXML)
         elif self._type in self.multi_value_types or self._type in ('', None):
             if isinstance(value, bool):
                 value = [value]
@@ -153,8 +144,7 @@ class FormField(ElementBase):
                 self.xml.append(valXML)
         else:
             if isinstance(value, list):
-                raise ValueError("Cannot add multiple values " + \
-                                 "to a %s field." % self._type)
+                raise ValueError(("Cannot add multiple values " + f"to a {self._type} field."))
             valXML = ET.Element(valXMLName)
             valXML.text = value
             self.xml.append(valXML)

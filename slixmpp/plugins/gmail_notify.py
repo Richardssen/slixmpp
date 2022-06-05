@@ -41,11 +41,12 @@ class MailBox(ElementBase):
                   'url', 'threads', 'matched', 'estimate'}
 
     def get_threads(self):
-        threads = []
-        for threadXML in self.xml.findall('{%s}%s' % (MailThread.namespace,
-                                                      MailThread.name)):
-            threads.append(MailThread(xml=threadXML, parent=None))
-        return threads
+        return [
+            MailThread(xml=threadXML, parent=None)
+            for threadXML in self.xml.findall(
+                '{%s}%s' % (MailThread.namespace, MailThread.name)
+            )
+        ]
 
     def get_matched(self):
         return self['total-matched']
@@ -66,8 +67,11 @@ class MailThread(ElementBase):
         senders = []
         sendersXML = self.xml.find('{%s}senders' % self.namespace)
         if sendersXML is not None:
-            for senderXML in sendersXML.findall('{%s}sender' % self.namespace):
-                senders.append(MailSender(xml=senderXML, parent=None))
+            senders.extend(
+                MailSender(xml=senderXML, parent=None)
+                for senderXML in sendersXML.findall('{%s}sender' % self.namespace)
+            )
+
         return senders
 
 

@@ -17,20 +17,26 @@ class Forwarded(ElementBase):
     interfaces = {'stanza'}
 
     def get_stanza(self):
-        for stanza in self:
-            if isinstance(stanza, (Message, Presence, Iq)):
-                return stanza
-        return ''
+        return next(
+            (
+                stanza
+                for stanza in self
+                if isinstance(stanza, (Message, Presence, Iq))
+            ),
+            '',
+        )
 
     def set_stanza(self, value):
         self.del_stanza()
         self.append(value)
 
     def del_stanza(self):
-        found_stanzas = []
-        for stanza in self:
-            if isinstance(stanza, (Message, Presence, Iq)):
-                found_stanzas.append(stanza)
+        found_stanzas = [
+            stanza
+            for stanza in self
+            if isinstance(stanza, (Message, Presence, Iq))
+        ]
+
         for stanza in found_stanzas:
             self.iterables.remove(stanza)
             self.xml.remove(stanza.xml)

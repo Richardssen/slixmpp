@@ -170,10 +170,10 @@ class XEP_0323(BasePlugin):
 
     def _new_session(self):
         """ Return a new session ID. """
-        return str(time.time()) + '-' + self.xmpp.new_id()
+        return f'{str(time.time())}-{self.xmpp.new_id()}'
 
     def session_bind(self, jid):
-        logging.debug("setting the Disco discovery for %s" % Sensordata.namespace)
+        logging.debug(f"setting the Disco discovery for {Sensordata.namespace}")
         self.xmpp['xep_0030'].add_feature(Sensordata.namespace)
         self.xmpp['xep_0030'].set_items(node=Sensordata.namespace, items=tuple())
 
@@ -241,7 +241,10 @@ class XEP_0323(BasePlugin):
         req_ok = True
 
         # Authentication
-        if len(self.test_authenticated_from) > 0 and not iq['from'] == self.test_authenticated_from:
+        if (
+            len(self.test_authenticated_from) > 0
+            and iq['from'] != self.test_authenticated_from
+        ):
             # Invalid authentication
             req_ok = False
             error_msg = "Access denied"
@@ -250,7 +253,7 @@ class XEP_0323(BasePlugin):
         process_nodes = []
         if len(iq['req']['nodes']) > 0:
             for n in iq['req']['nodes']:
-                if not n['nodeId'] in self.nodes:
+                if n['nodeId'] not in self.nodes:
                     req_ok = False
                     error_msg = "Invalid nodeId " + n['nodeId']
             process_nodes = [n['nodeId'] for n in iq['req']['nodes']]
@@ -284,7 +287,7 @@ class XEP_0323(BasePlugin):
                 req_ok = False
                 error_msg = "Invalid datetime in 'when' flag, please use ISO format (i.e. 2013-04-05T15:00:03)."
 
-            if not dt is None:
+            if dt is not None:
                 # Datetime properly formatted
                 dtnow = datetime.datetime.now()
                 dtdiff = dt - dtnow
@@ -295,19 +298,23 @@ class XEP_0323(BasePlugin):
 
         if req_ok:
             session = self._new_session()
-            self.sessions[session] = {"from": iq['from'], "to": iq['to'], "seqnr": seqnr}
-            self.sessions[session]["commTimers"] = {}
-            self.sessions[session]["nodeDone"] = {}
+            self.sessions[session] = {
+                "from": iq['from'],
+                "to": iq['to'],
+                "seqnr": seqnr,
+                "commTimers": {},
+                "nodeDone": {},
+            }
 
             iq = iq.reply()
             iq['accepted']['seqnr'] = seqnr
-            if not request_delay_sec is None:
+            if request_delay_sec is not None:
                 iq['accepted']['queued'] = "true"
             iq.send()
 
             self.sessions[session]["node_list"] = process_nodes
 
-            if not request_delay_sec is None:
+            if request_delay_sec is not None:
                 # Delay request to requested time
                 timer = Timer(request_delay_sec, self._event_delayed_req, args=(session, process_fields, req_flags))
                 self.sessions[session]["commTimers"]["delaytimer"] = timer
@@ -401,10 +408,10 @@ class XEP_0323(BasePlugin):
         Arguments:
             session         -- The request session id
         """
-        for n in self.sessions[session]["nodeDone"]:
-            if not self.sessions[session]["nodeDone"][n]:
-                return False
-        return True
+        return all(
+            self.sessions[session]["nodeDone"][n]
+            for n in self.sessions[session]["nodeDone"]
+        )
 
     def _device_field_request_callback(self, session, nodeId, result, timestamp_block, error_msg=None):
         """
@@ -439,7 +446,7 @@ class XEP_0323(BasePlugin):
             error_msg        -- [optional] Only applies when result == "error".
                                 Error details when a request failed.
         """
-        if not session in self.sessions:
+        if session not in self.sessions:
             # This can happen if a session was deleted, like in a cancellation. Just drop the data.
             return
 
@@ -460,7 +467,6 @@ class XEP_0323(BasePlugin):
                 msg['failure']['done'] = 'true'
                 # The session is complete, delete it
                 del self.sessions[session]
-            msg.send()
         else:
             msg = self.xmpp.Message()
             msg['from'] = self.sessions[session]['to']
@@ -490,7 +496,8 @@ class XEP_0323(BasePlugin):
                 # Restart comm timer
                 self.sessions[session]["commTimers"][nodeId].reset()
 
-            msg.send()
+
+        msg.send()
 
     def _handle_event_cancel(self, iq):
         """ Received Iq with cancel - this is a cancel request.
@@ -633,10 +640,7 @@ class XEP_0323(BasePlugin):
     def _handle_event_accepted(self, iq):
         """ Received Iq with accepted - request was accepted """
         seqnr = iq['accepted']['seqnr']
-        result = "accepted"
-        if iq['accepted']['queued'] == 'true':
-            result = "queued"
-
+        result = "queued" if iq['accepted']['queued'] == 'true' else "accepted"
         callback = self.sessions[seqnr]["callback"]
         callback(from_jid=iq['from'], result=result)
 
@@ -671,14 +675,12 @@ class XEP_0323(BasePlugin):
             for ts in node['timestamps']:
                 fields = []
                 for d in ts['datas']:
-                    field_block = {}
-                    field_block["name"] = d['name']
-                    field_block["typename"] = d._get_typename()
+                    field_block = {"name": d['name'], "typename": d._get_typename()}
                     field_block["value"] = d['value']
-                    if not d['unit'] == "": field_block["unit"] = d['unit']
-                    if not d['dataType'] == "": field_block["dataType"] = d['dataType']
+                    if d['unit'] != "": field_block["unit"] = d['unit']
+                    if d['dataType'] != "": field_block["dataType"] = d['dataType']
                     flags = d._get_flags()
-                    if not len(flags) == 0:
+                    if len(flags) != 0:
                         field_block["flags"] = flags
                     fields.append(field_block)
 

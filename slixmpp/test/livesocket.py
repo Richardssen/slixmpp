@@ -164,8 +164,8 @@ class TestLiveSocket(object):
         remove the feature negotiation and log in stanzas.
         """
         with self.send_queue_lock:
-            for i in range(0, self.send_queue.qsize()):
+            for _ in range(self.send_queue.qsize()):
                 self.send_queue.get(block=False)
         with self.recv_queue_lock:
-            for i in range(0, self.recv_queue.qsize()):
+            for _ in range(self.recv_queue.qsize()):
                 self.recv_queue.get(block=False)
